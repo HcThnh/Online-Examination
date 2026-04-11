@@ -9,10 +9,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.bean.MockBean;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.time.Instant;
 import java.util.List;
@@ -20,7 +21,6 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -34,9 +34,12 @@ class TeacherResultControllerTest {
     @MockBean private JwtUtil jwtUtil;
     @MockBean private JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    private UsernamePasswordAuthenticationToken teacherAuth() {
-        return new UsernamePasswordAuthenticationToken(1L, "token",
-                List.of(new SimpleGrantedAuthority("ROLE_TEACHER")));
+    private static RequestPostProcessor asTeacher() {
+        return request -> {
+            request.setUserPrincipal(new UsernamePasswordAuthenticationToken(1L, "token",
+                    List.of(new SimpleGrantedAuthority("ROLE_TEACHER"))));
+            return request;
+        };
     }
 
     @Test
@@ -47,8 +50,7 @@ class TeacherResultControllerTest {
         when(resultService.getClassResults(eq(1L), eq(10L), anyString(), anyString(), isNull(), eq(0), eq(20)))
                 .thenReturn(response);
 
-        mockMvc.perform(get("/api/teacher/tests/10/results")
-                        .with(authentication(teacherAuth())))
+        mockMvc.perform(get("/api/teacher/tests/10/results").with(asTeacher()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalStudents").value(1))
                 .andExpect(jsonPath("$.results[0].studentName").value("Alice"));
@@ -62,8 +64,7 @@ class TeacherResultControllerTest {
         ClassStatisticsResponse response = new ClassStatisticsResponse(30, 75.5, 98, 32, 75.5, 83.3, 50, dist);
         when(resultService.getStatistics(1L, 10L)).thenReturn(response);
 
-        mockMvc.perform(get("/api/teacher/tests/10/statistics")
-                        .with(authentication(teacherAuth())))
+        mockMvc.perform(get("/api/teacher/tests/10/statistics").with(asTeacher()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalAttempts").value(30))
                 .andExpect(jsonPath("$.averageScore").value(75.5));
@@ -76,16 +77,14 @@ class TeacherResultControllerTest {
         );
         when(resultService.getQuestionAnalysis(1L, 10L)).thenReturn(analysis);
 
-        mockMvc.perform(get("/api/teacher/tests/10/question-analysis")
-                        .with(authentication(teacherAuth())))
+        mockMvc.perform(get("/api/teacher/tests/10/question-analysis").with(asTeacher()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].correctRate").value(73.3));
     }
 
     @Test
     void exportResults_csv_callsExportService() throws Exception {
-        mockMvc.perform(get("/api/teacher/tests/10/results/export?format=csv")
-                        .with(authentication(teacherAuth())))
+        mockMvc.perform(get("/api/teacher/tests/10/results/export?format=csv").with(asTeacher()))
                 .andExpect(status().isOk());
 
         verify(exportService).exportCsv(eq(1L), eq(10L), any());
@@ -93,8 +92,7 @@ class TeacherResultControllerTest {
 
     @Test
     void exportResults_xlsx_callsExportService() throws Exception {
-        mockMvc.perform(get("/api/teacher/tests/10/results/export?format=xlsx")
-                        .with(authentication(teacherAuth())))
+        mockMvc.perform(get("/api/teacher/tests/10/results/export?format=xlsx").with(asTeacher()))
                 .andExpect(status().isOk());
 
         verify(exportService).exportExcel(eq(1L), eq(10L), any());

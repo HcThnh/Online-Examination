@@ -9,18 +9,18 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.bean.MockBean;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.time.Instant;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -34,9 +34,12 @@ class StudentControllerTest {
     @MockBean private JwtUtil jwtUtil;
     @MockBean private JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    private UsernamePasswordAuthenticationToken studentAuth() {
-        return new UsernamePasswordAuthenticationToken(5L, "student-token",
-                List.of(new SimpleGrantedAuthority("ROLE_STUDENT")));
+    private static RequestPostProcessor asStudent() {
+        return request -> {
+            request.setUserPrincipal(new UsernamePasswordAuthenticationToken(5L, "student-token",
+                    List.of(new SimpleGrantedAuthority("ROLE_STUDENT"))));
+            return request;
+        };
     }
 
     @Test
@@ -66,8 +69,7 @@ class StudentControllerTest {
         ));
         when(studentService.getTestQuestions(10L)).thenReturn(response);
 
-        mockMvc.perform(get("/api/student/tests/10/questions")
-                        .with(authentication(studentAuth())))
+        mockMvc.perform(get("/api/student/tests/10/questions").with(asStudent()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.testTitle").value("Math"))
                 .andExpect(jsonPath("$.questions[0].options.length()").value(2));
@@ -83,8 +85,7 @@ class StudentControllerTest {
         SubmitResultResponse response = new SubmitResultResponse(1L, 10, 10, 100.0, Instant.now());
         when(studentService.submitTest(eq(5L), eq(10L), any())).thenReturn(response);
 
-        mockMvc.perform(post("/api/student/tests/10/submit")
-                        .with(authentication(studentAuth()))
+        mockMvc.perform(post("/api/student/tests/10/submit").with(asStudent())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -99,8 +100,7 @@ class StudentControllerTest {
         );
         when(studentService.getPastAttempts(5L)).thenReturn(results);
 
-        mockMvc.perform(get("/api/student/my-results")
-                        .with(authentication(studentAuth())))
+        mockMvc.perform(get("/api/student/my-results").with(asStudent()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].testTitle").value("Math"))
                 .andExpect(jsonPath("$[0].score").value(80));
