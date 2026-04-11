@@ -38,6 +38,13 @@ public class TeacherTestController {
         return ResponseEntity.ok(examService.listTests(teacherId));
     }
 
+    @GetMapping("/{testId}")
+    @Operation(summary = "Get test details", description = "Returns test metadata, question count, and submission statistics")
+    public ResponseEntity<TestDetailResponse> getTestDetail(Authentication auth, @PathVariable Long testId) {
+        Long teacherId = (Long) auth.getPrincipal();
+        return ResponseEntity.ok(examService.getTestDetail(teacherId, testId));
+    }
+
     @PutMapping("/{testId}")
     @Operation(summary = "Update a test", description = "Updates title, description, and passcode of an existing test")
     public ResponseEntity<TestResponse> updateTest(Authentication auth,
