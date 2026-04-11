@@ -3,7 +3,9 @@ package com.examapp.service;
 import com.examapp.dto.auth.*;
 import com.examapp.entity.User;
 import com.examapp.enums.Role;
+import com.examapp.dto.MessageResponse;
 import com.examapp.exception.DuplicateResourceException;
+import com.examapp.exception.ResourceNotFoundException;
 import com.examapp.exception.UnauthorizedException;
 import com.examapp.repository.UserRepository;
 import com.examapp.security.JwtUtil;
@@ -18,7 +20,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -91,5 +93,40 @@ class AuthServiceTest {
         when(passwordEncoder.matches("wrong", "hashed")).thenReturn(false);
 
         assertThrows(UnauthorizedException.class, () -> authService.login(request));
+    }
+
+    @Test
+    void changePassword_success() {
+        ChangePasswordRequest request = new ChangePasswordRequest("password123", "newpassword1");
+        User user = new User("John", "john@test.com", "old-hash", Role.TEACHER);
+        user.setId(1L);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("password123", "old-hash")).thenReturn(true);
+        when(passwordEncoder.encode("newpassword1")).thenReturn("new-hash");
+
+        MessageResponse response = authService.changePassword(1L, request);
+
+        assertEquals("Password updated successfully", response.message());
+        verify(userRepository).save(argThat(u -> "new-hash".equals(u.getPasswordHash())));
+    }
+
+    @Test
+    void changePassword_wrongCurrentPassword_throwsException() {
+        ChangePasswordRequest request = new ChangePasswordRequest("wrong", "newpassword1");
+        User user = new User("John", "john@test.com", "old-hash", Role.TEACHER);
+        user.setId(1L);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("wrong", "old-hash")).thenReturn(false);
+
+        assertThrows(UnauthorizedException.class, () -> authService.changePassword(1L, request));
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void changePassword_userNotFound_throwsException() {
+        ChangePasswordRequest request = new ChangePasswordRequest("password123", "newpassword1");
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> authService.changePassword(99L, request));
     }
 }

@@ -1,6 +1,18 @@
 package com.examapp.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,26 +51,62 @@ public class TestAttempt {
         submittedAt = Instant.now();
     }
 
-    public TestAttempt() {}
+    public TestAttempt() {
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public Exam getExam() { return exam; }
-    public void setExam(Exam exam) { this.exam = exam; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public User getStudent() { return student; }
-    public void setStudent(User student) { this.student = student; }
+    public Exam getExam() {
+        return exam;
+    }
 
-    public Integer getScore() { return score; }
-    public void setScore(Integer score) { this.score = score; }
+    public void setExam(Exam exam) {
+        this.exam = exam;
+    }
 
-    public Integer getMaxScore() { return maxScore; }
-    public void setMaxScore(Integer maxScore) { this.maxScore = maxScore; }
+    public User getStudent() {
+        return student;
+    }
 
-    public List<StudentAnswer> getAnswers() { return answers; }
-    public void setAnswers(List<StudentAnswer> answers) { this.answers = answers; }
+    public void setStudent(User student) {
+        this.student = student;
+    }
 
-    public Instant getSubmittedAt() { return submittedAt; }
-    public void setSubmittedAt(Instant submittedAt) { this.submittedAt = submittedAt; }
+    public Integer getScore() {
+        return score;
+    }
+
+    public void setScore(Integer score) {
+        this.score = score;
+    }
+
+    public Integer getMaxScore() {
+        return maxScore;
+    }
+
+    public void setMaxScore(Integer maxScore) {
+        this.maxScore = maxScore;
+    }
+
+    public List<StudentAnswer> getAnswers() {
+        return answers;
+    }
+
+    public void setAnswers(List<StudentAnswer> answers) {
+        this.answers = answers;
+    }
+
+    public Instant getSubmittedAt() {
+        return submittedAt;
+    }
+
+    public void setSubmittedAt(Instant submittedAt) {
+        this.submittedAt = submittedAt;
+    }
 }

@@ -1,6 +1,13 @@
 package com.examapp.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "student_answers")
@@ -22,17 +29,38 @@ public class StudentAnswer {
     @JoinColumn(name = "selected_option_id", nullable = false)
     private AnswerOption selectedOption;
 
-    public StudentAnswer() {}
+    public StudentAnswer() {
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public TestAttempt getAttempt() { return attempt; }
-    public void setAttempt(TestAttempt attempt) { this.attempt = attempt; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public Question getQuestion() { return question; }
-    public void setQuestion(Question question) { this.question = question; }
+    public TestAttempt getAttempt() {
+        return attempt;
+    }
 
-    public AnswerOption getSelectedOption() { return selectedOption; }
-    public void setSelectedOption(AnswerOption selectedOption) { this.selectedOption = selectedOption; }
+    public void setAttempt(TestAttempt attempt) {
+        this.attempt = attempt;
+    }
+
+    public Question getQuestion() {
+        return question;
+    }
+
+    public void setQuestion(Question question) {
+        this.question = question;
+    }
+
+    public AnswerOption getSelectedOption() {
+        return selectedOption;
+    }
+
+    public void setSelectedOption(AnswerOption selectedOption) {
+        this.selectedOption = selectedOption;
+    }
 }

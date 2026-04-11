@@ -1,11 +1,27 @@
 package com.examapp.service;
 
-import com.examapp.dto.student.*;
-import com.examapp.entity.*;
+import com.examapp.dto.student.AttemptResultResponse;
+import com.examapp.dto.student.PastAttemptResponse;
+import com.examapp.dto.student.StudentAccessRequest;
+import com.examapp.dto.student.StudentAccessResponse;
+import com.examapp.dto.student.StudentTestResponse;
+import com.examapp.dto.student.SubmitResultResponse;
+import com.examapp.dto.student.SubmitTestRequest;
+import com.examapp.entity.AnswerOption;
+import com.examapp.entity.Exam;
+import com.examapp.entity.Question;
+import com.examapp.entity.StudentAnswer;
+import com.examapp.entity.TestAttempt;
+import com.examapp.entity.User;
 import com.examapp.enums.Role;
 import com.examapp.exception.ConflictException;
 import com.examapp.exception.ResourceNotFoundException;
-import com.examapp.repository.*;
+import com.examapp.repository.AnswerOptionRepository;
+import com.examapp.repository.ExamRepository;
+import com.examapp.repository.QuestionRepository;
+import com.examapp.repository.StudentAnswerRepository;
+import com.examapp.repository.TestAttemptRepository;
+import com.examapp.repository.UserRepository;
 import com.examapp.security.JwtUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -105,11 +121,15 @@ public class StudentService {
         List<StudentAnswer> answers = new ArrayList<>();
         for (SubmitTestRequest.AnswerDto answerDto : request.answers()) {
             Question question = questionMap.get(answerDto.questionId());
-            if (question == null) continue;
+            if (question == null) {
+                continue;
+            }
 
             AnswerOption selectedOption = answerOptionRepository.findById(answerDto.selectedOptionId())
                     .orElse(null);
-            if (selectedOption == null) continue;
+            if (selectedOption == null) {
+                continue;
+            }
 
             StudentAnswer studentAnswer = new StudentAnswer();
             studentAnswer.setAttempt(attempt);
