@@ -18,7 +18,6 @@ const Login: React.FC = () => {
   useEffect(() => {
     if (location.state?.message) {
       setSuccessMessage(location.state.message);
-      // Clear state to avoid message persisting on manual refresh
       window.history.replaceState({}, document.title);
     }
   }, [location]);
@@ -35,7 +34,6 @@ const Login: React.FC = () => {
 
     try {
       const data = await loginApi(formData);
-      // Expected structure: { token: '...', user: { ... } }
       localStorage.setItem('token', data.token);
       loginContext(data.user);
       navigate('/teacher/dashboard');
@@ -47,42 +45,38 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="space-y-5">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Teacher Login</h1>
-        <p className="text-slate-500">Access your dashboard to manage tests and view student results</p>
+    <div className="space-y-6">
+      <div className="mb-2 text-center md:text-left">
+        <h1 className="text-2xl font-extrabold text-slate-900 mb-2">Teacher Login</h1>
+        <p className="text-slate-500 text-sm">Access your teacher dashboard and manage tests</p>
       </div>
 
       {successMessage && (
-        <div className="bg-green-50 border border-green-100 text-green-600 px-4 py-3 rounded-xl flex items-start gap-3 text-sm mb-4">
+        <div className="bg-green-50 border border-green-100 text-green-600 px-4 py-3 rounded-2xl flex items-center gap-2 text-sm">
           <CheckCircle2 className="w-5 h-5 shrink-0" />
           <span>{successMessage}</span>
         </div>
       )}
 
       {error && (
-        <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl flex items-start gap-3 text-sm mb-4">
+        <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-2xl flex items-center gap-2 text-sm">
           <AlertCircle className="w-5 h-5 shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <label htmlFor="email" className="text-sm font-semibold text-slate-700">
-            Email address
-          </label>
+          <label htmlFor="email" className="text-sm font-bold text-slate-700 ml-1">Email address</label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-              <Mail className="h-5 w-5" />
-            </div>
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
             <input
               id="email"
               type="email"
               required
               value={formData.email}
               onChange={handleChange}
-              className="block w-full pl-10 pr-3 py-3 bg-white border border-gray-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all sm:text-sm"
+              className="block w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
               placeholder="you@example.com"
             />
           </div>
@@ -90,29 +84,25 @@ const Login: React.FC = () => {
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <label htmlFor="password" className="text-sm font-semibold text-slate-700">
-              Password
-            </label>
-            <Link to="/forgot-password" className="text-sm font-medium text-primary hover:text-primary-hover underline underline-offset-4">
-              Forgot password?
+            <label htmlFor="password" className="text-sm font-bold text-slate-700 ml-1">Password</label>
+            <Link to="/forgot-password" title="Forgot password" className="text-sm font-bold text-primary hover:underline underline-offset-4">
+              Forgot?
             </Link>
           </div>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-              <Lock className="h-5 w-5" />
-            </div>
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
             <input
               id="password"
               type={showPassword ? 'text' : 'password'}
               required
               value={formData.password}
               onChange={handleChange}
-              className="block w-full pl-10 pr-10 py-3 bg-white border border-gray-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all sm:text-sm"
+              className="block w-full pl-12 pr-10 py-3.5 bg-slate-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
               placeholder="••••••••"
             />
             <button
               type="button"
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
               onClick={() => setShowPassword(!showPassword)}
             >
               {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -123,17 +113,15 @@ const Login: React.FC = () => {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full flex items-center justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all disabled:opacity-70"
+          className="w-full flex items-center justify-center py-4 px-4 mt-2 rounded-2xl shadow-lg shadow-primary/20 text-sm font-bold text-white bg-primary hover:bg-primary-hover transition-all transform hover:-translate-y-1 active:scale-95 disabled:opacity-70"
         >
-          {isLoading ? (
-            <Loader2 className="w-5 h-5 animate-spin mr-2" />
-          ) : null}
+          {isLoading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : null}
           {isLoading ? 'Signing in...' : 'Sign in'}
         </button>
 
-        <p className="mt-8 text-center text-sm text-slate-600">
-          Don't have an account?{' '}
-          <Link to="/register" className="font-bold text-primary hover:text-primary-hover underline underline-offset-4">
+        <p className="mt-6 text-center text-sm text-slate-600">
+          Don't have a teacher account?{' '}
+          <Link to="/register" className="font-extrabold text-primary hover:underline underline-offset-4 decoration-2">
             Join for free
           </Link>
         </p>

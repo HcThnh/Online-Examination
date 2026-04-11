@@ -23,9 +23,9 @@ const Register: React.FC = () => {
     if (!formData.email.trim()) newErrors.email = 'Email address is required';
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Invalid email format';
     
-    if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
+    if (formData.password.length < 8) newErrors.password = 'Min 8 characters';
     if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = 'Passwords mismatch';
     }
     
     setErrors(newErrors);
@@ -48,14 +48,14 @@ const Register: React.FC = () => {
     setIsLoading(true);
     try {
       await registerApi({
-        full_name: formData.name, // adjusted to common backend naming, adjust if needed
+        full_name: formData.name,
         email: formData.email,
         password: formData.password,
         role: userRole.toUpperCase()
       });
-      navigate('/login', { state: { message: 'Registration successful! Please log in.' } });
+      navigate('/login', { state: { message: 'Registration successful!' } });
     } catch (err: any) {
-      setErrors({ server: err.response?.data?.message || 'Registration failed. Please try again.' });
+      setErrors({ server: err.response?.data?.message || 'Registration failed.' });
     } finally {
       setIsLoading(false);
     }
@@ -63,132 +63,113 @@ const Register: React.FC = () => {
 
   return (
     <div className="space-y-5">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Teacher Registration</h1>
-        <p className="text-slate-500">Create an account to manage your exams and students</p>
+      <div className="mb-2">
+        <h1 className="text-2xl font-extrabold text-slate-900 mb-1">Teacher Registration</h1>
+        <p className="text-slate-500 text-sm">Join the community of professional educators</p>
       </div>
 
       {errors.server && (
-        <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl flex items-start gap-3 text-sm">
+        <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-2xl flex items-center gap-2 text-sm">
           <AlertCircle className="w-5 h-5 shrink-0" />
           <span>{errors.server}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Role selection removed, defaults to Teacher */}
-
-        <div className="space-y-1">
-          <label htmlFor="name" className="text-sm font-semibold text-slate-700">
-            Full name
-          </label>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <label htmlFor="name" className="text-sm font-bold text-slate-700 ml-1">Full Name</label>
           <div className="relative">
-            <div className={`absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none ${errors.name ? 'text-red-400' : 'text-slate-400'}`}>
-              <User className="h-5 w-5" />
-            </div>
+            <User className={`absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 ${errors.name ? 'text-red-400' : 'text-slate-400'}`} />
             <input
               id="name"
               type="text"
               required
               value={formData.name}
               onChange={handleChange}
-              className={`block w-full pl-10 pr-3 py-3 bg-white border ${errors.name ? 'border-red-300 ring-red-100' : 'border-gray-200'} rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all sm:text-sm`}
+              className={`block w-full pl-12 pr-4 py-3.5 bg-slate-50 border ${errors.name ? 'border-red-300' : 'border-gray-200'} rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all`}
               placeholder="John Doe"
             />
           </div>
-          {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
+          {errors.name && <p className="text-sm text-red-500 ml-1">{errors.name}</p>}
         </div>
 
-        <div className="space-y-1">
-          <label htmlFor="email" className="text-sm font-semibold text-slate-700">
-            Email address
-          </label>
+        <div className="space-y-2">
+          <label htmlFor="email" className="text-sm font-bold text-slate-700 ml-1">Email address</label>
           <div className="relative">
-            <div className={`absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none ${errors.email ? 'text-red-400' : 'text-slate-400'}`}>
-              <Mail className="h-5 w-5" />
-            </div>
+            <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 ${errors.email ? 'text-red-400' : 'text-slate-400'}`} />
             <input
               id="email"
               type="email"
               required
               value={formData.email}
               onChange={handleChange}
-              className={`block w-full pl-10 pr-3 py-3 bg-white border ${errors.email ? 'border-red-300 ring-red-100' : 'border-gray-200'} rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all sm:text-sm`}
+              className={`block w-full pl-12 pr-4 py-3.5 bg-slate-50 border ${errors.email ? 'border-red-300' : 'border-gray-200'} rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all`}
               placeholder="you@example.com"
             />
           </div>
-          {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
+          {errors.email && <p className="text-sm text-red-500 ml-1">{errors.email}</p>}
         </div>
 
-        <div className="space-y-1">
-          <label htmlFor="password" className="text-sm font-semibold text-slate-700">
-            Password (min 8 characters)
-          </label>
-          <div className="relative">
-            <div className={`absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none ${errors.password ? 'text-red-400' : 'text-slate-400'}`}>
-              <Lock className="h-5 w-5" />
+        {/* Password Fields stacked vertically */}
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label htmlFor="password" className="text-sm font-bold text-slate-700 ml-1">Password</label>
+            <div className="relative">
+              <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 ${errors.password ? 'text-red-400' : 'text-slate-400'}`} />
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={formData.password}
+                onChange={handleChange}
+                className={`block w-full pl-12 pr-10 py-3.5 bg-slate-50 border ${errors.password ? 'border-red-300' : 'border-gray-200'} rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all`}
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
             </div>
-            <input
-              id="password"
-              type={showPassword ? 'text' : 'password'}
-              required
-              value={formData.password}
-              onChange={handleChange}
-              className={`block w-full pl-10 pr-10 py-3 bg-white border ${errors.password ? 'border-red-300 ring-red-100' : 'border-gray-200'} rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all sm:text-sm`}
-              placeholder="••••••••"
-            />
-            <button
-              type="button"
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-            </button>
           </div>
-          {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
+
+          <div className="space-y-2">
+            <label htmlFor="confirmPassword" className="text-sm font-bold text-slate-700 ml-1">Confirm Password</label>
+            <div className="relative">
+              <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 ${errors.confirmPassword ? 'text-red-400' : 'text-slate-400'}`} />
+              <input
+                id="confirmPassword"
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className={`block w-full pl-12 pr-4 py-3.5 bg-slate-50 border ${errors.confirmPassword ? 'border-red-300' : 'border-gray-200'} rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all`}
+                placeholder="••••••••"
+              />
+            </div>
+          </div>
         </div>
 
-        <div className="space-y-1">
-          <label htmlFor="confirmPassword" className="text-sm font-semibold text-slate-700">
-            Confirm Password
-          </label>
-          <div className="relative">
-            <div className={`absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none ${errors.confirmPassword ? 'text-red-400' : 'text-slate-400'}`}>
-              <Lock className="h-5 w-5" />
-            </div>
-            <input
-              id="confirmPassword"
-              type={showPassword ? 'text' : 'password'}
-              required
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              className={`block w-full pl-10 pr-3 py-3 bg-white border ${errors.confirmPassword ? 'border-red-300 ring-red-100' : 'border-gray-200'} rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all sm:text-sm`}
-              placeholder="••••••••"
-            />
-          </div>
-          {errors.confirmPassword && <p className="text-xs text-red-500 mt-1">{errors.confirmPassword}</p>}
-        </div>
+        {(errors.password || errors.confirmPassword) && (
+          <p className="text-sm text-red-500 ml-1">{errors.password || errors.confirmPassword}</p>
+        )}
 
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full flex items-center justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all disabled:opacity-70"
+          className="w-full flex items-center justify-center py-4 px-4 mt-2 rounded-2xl shadow-lg shadow-primary/20 text-sm font-bold text-white bg-primary hover:bg-primary-hover transition-all transform hover:-translate-y-1 active:scale-95 disabled:opacity-70"
         >
-          {isLoading ? (
-            <Loader2 className="w-5 h-5 animate-spin mr-2" />
-          ) : null}
-          {isLoading ? 'Creating account...' : 'Create account'}
+          {isLoading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : null}
+          {isLoading ? 'Creating Account...' : 'Create Teacher Account'}
         </button>
 
-        <p className="mt-8 text-center text-sm text-slate-600">
+        <p className="mt-4 text-center text-sm text-slate-600">
           Already have an account?{' '}
-          <Link to="/login" className="font-bold text-primary hover:text-primary-hover underline underline-offset-4">
-            Log in
+          <Link to="/login" className="font-extrabold text-primary hover:underline underline-offset-4 decoration-2">
+            Log in here
           </Link>
-        </p>
-
-        <p className="text-[10px] text-center text-slate-400 mt-4 leading-relaxed">
-          By joining, you agree to our <span className="underline cursor-pointer">Terms of Service</span> and <span className="underline cursor-pointer">Privacy Policy</span>.
         </p>
       </form>
     </div>

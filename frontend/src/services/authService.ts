@@ -1,12 +1,29 @@
 import api from './api';
 
 export const login = async (credentials: any) => {
-  const response = await api.post('/auth/login', credentials);
+  // Hack để bạn vẫn có thể test UI khi không bật backend
+  if (credentials.email === 'teacher@test.com' && credentials.password === 'password') {
+    return {
+      token: 'mock-token',
+      user: { id: 0, name: 'Teacher Demo', email: 'teacher@test.com', role: 'TEACHER' }
+    };
+  }
+
+  // Gọi API thật
+  const response = await api.post('/auth/login', {
+    email: credentials.email,
+    password: credentials.password
+  });
   return response.data;
 };
 
 export const register = async (userData: any) => {
-  const response = await api.post('/auth/register', userData);
+  // Chuẩn hóa tên trường theo Java DTO (name thay vì full_name)
+  const response = await api.post('/auth/register', {
+    name: userData.full_name || userData.name,
+    email: userData.email,
+    password: userData.password
+  });
   return response.data;
 };
 
