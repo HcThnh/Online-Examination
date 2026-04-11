@@ -1,7 +1,11 @@
 package com.examapp.service;
 
 import com.examapp.dto.MessageResponse;
-import com.examapp.dto.auth.*;
+import com.examapp.dto.auth.AuthResponse;
+import com.examapp.dto.auth.ChangePasswordRequest;
+import com.examapp.dto.auth.LoginRequest;
+import com.examapp.dto.auth.RegisterRequest;
+import com.examapp.dto.auth.RegisterResponse;
 import com.examapp.entity.User;
 import com.examapp.enums.Role;
 import com.examapp.exception.DuplicateResourceException;

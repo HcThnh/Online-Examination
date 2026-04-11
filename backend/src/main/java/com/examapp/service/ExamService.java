@@ -1,12 +1,16 @@
 package com.examapp.service;
 
-import com.examapp.dto.test.*;
+import com.examapp.dto.test.CreateTestRequest;
+import com.examapp.dto.test.TestDetailResponse;
+import com.examapp.dto.test.TestResponse;
+import com.examapp.dto.test.TestSummaryResponse;
 import com.examapp.entity.Exam;
 import com.examapp.entity.User;
 import com.examapp.exception.DuplicateResourceException;
 import com.examapp.exception.ResourceNotFoundException;
 import com.examapp.exception.ForbiddenException;
 import com.examapp.repository.ExamRepository;
+import com.examapp.repository.TestAttemptRepository;
 import com.examapp.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,10 +22,14 @@ public class ExamService {
 
     private final ExamRepository examRepository;
     private final UserRepository userRepository;
+    private final TestAttemptRepository testAttemptRepository;
 
-    public ExamService(ExamRepository examRepository, UserRepository userRepository) {
+    public ExamService(ExamRepository examRepository,
+                       UserRepository userRepository,
+                       TestAttemptRepository testAttemptRepository) {
         this.examRepository = examRepository;
         this.userRepository = userRepository;
+        this.testAttemptRepository = testAttemptRepository;
     }
 
     @Transactional
@@ -54,6 +62,29 @@ public class ExamService {
                         exam.getCreatedAt()
                 ))
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public TestDetailResponse getTestDetail(Long teacherId, Long testId) {
+        Exam exam = getOwnedExam(teacherId, testId);
+        int questionCount = examRepository.countQuestionsByExamId(testId);
+        long submissionCount = testAttemptRepository.countByExamId(testId);
+        Double averagePercentage = submissionCount > 0
+                ? testAttemptRepository.averagePercentageByExamId(testId)
+                : null;
+
+        return new TestDetailResponse(
+                exam.getId(),
+                exam.getTitle(),
+                exam.getDescription(),
+                exam.getPasscode(),
+                exam.getTeacher().getId(),
+                exam.getCreatedAt(),
+                exam.getUpdatedAt(),
+                questionCount,
+                submissionCount,
+                averagePercentage
+        );
     }
 
     @Transactional

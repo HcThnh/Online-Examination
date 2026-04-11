@@ -1,0 +1,36 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main]
+    paths: [backend/**]
+  pull_request:
+    branches: [main]
+    paths: [backend/**]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+
+      - name: Checkstyle
+        run: ./mvnw checkstyle:check -B
+
+      - name: Compile
+        run: ./mvnw compile -B -q
+
+      - name: Run tests
+        run: ./mvnw test -B
