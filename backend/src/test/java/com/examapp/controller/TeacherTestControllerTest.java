@@ -9,11 +9,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.bean.MockBean;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.time.Instant;
 import java.util.List;
@@ -22,7 +23,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -36,9 +36,12 @@ class TeacherTestControllerTest {
     @MockBean private JwtUtil jwtUtil;
     @MockBean private JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    private UsernamePasswordAuthenticationToken teacherAuth() {
-        return new UsernamePasswordAuthenticationToken(1L, "token",
-                List.of(new SimpleGrantedAuthority("ROLE_TEACHER")));
+    private static RequestPostProcessor asTeacher() {
+        return request -> {
+            request.setUserPrincipal(new UsernamePasswordAuthenticationToken(1L, "token",
+                    List.of(new SimpleGrantedAuthority("ROLE_TEACHER"))));
+            return request;
+        };
     }
 
     @Test
@@ -48,8 +51,7 @@ class TeacherTestControllerTest {
 
         when(examService.createTest(eq(1L), any())).thenReturn(response);
 
-        mockMvc.perform(post("/api/teacher/tests")
-                        .with(authentication(teacherAuth()))
+        mockMvc.perform(post("/api/teacher/tests").with(asTeacher())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -64,8 +66,7 @@ class TeacherTestControllerTest {
         );
         when(examService.listTests(1L)).thenReturn(tests);
 
-        mockMvc.perform(get("/api/teacher/tests")
-                        .with(authentication(teacherAuth())))
+        mockMvc.perform(get("/api/teacher/tests").with(asTeacher()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].title").value("Math"))
                 .andExpect(jsonPath("$[0].questionCount").value(5));
@@ -78,8 +79,7 @@ class TeacherTestControllerTest {
 
         when(examService.updateTest(eq(1L), eq(1L), any())).thenReturn(response);
 
-        mockMvc.perform(put("/api/teacher/tests/1")
-                        .with(authentication(teacherAuth()))
+        mockMvc.perform(put("/api/teacher/tests/1").with(asTeacher())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -88,8 +88,7 @@ class TeacherTestControllerTest {
 
     @Test
     void deleteTest_returnsNoContent() throws Exception {
-        mockMvc.perform(delete("/api/teacher/tests/1")
-                        .with(authentication(teacherAuth())))
+        mockMvc.perform(delete("/api/teacher/tests/1").with(asTeacher()))
                 .andExpect(status().isNoContent());
 
         verify(examService).deleteTest(1L, 1L);
@@ -101,8 +100,7 @@ class TeacherTestControllerTest {
                 {"title": "", "description": "Desc", "passcode": "ABC"}
                 """;
 
-        mockMvc.perform(post("/api/teacher/tests")
-                        .with(authentication(teacherAuth()))
+        mockMvc.perform(post("/api/teacher/tests").with(asTeacher())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isBadRequest());

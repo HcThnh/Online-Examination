@@ -10,18 +10,18 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.bean.MockBean;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -35,9 +35,12 @@ class TeacherQuestionControllerTest {
     @MockBean private JwtUtil jwtUtil;
     @MockBean private JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    private UsernamePasswordAuthenticationToken teacherAuth() {
-        return new UsernamePasswordAuthenticationToken(1L, "token",
-                List.of(new SimpleGrantedAuthority("ROLE_TEACHER")));
+    private static RequestPostProcessor asTeacher() {
+        return request -> {
+            request.setUserPrincipal(new UsernamePasswordAuthenticationToken(1L, "token",
+                    List.of(new SimpleGrantedAuthority("ROLE_TEACHER"))));
+            return request;
+        };
     }
 
     @Test
@@ -53,8 +56,7 @@ class TeacherQuestionControllerTest {
 
         when(questionService.addQuestion(eq(1L), eq(5L), any())).thenReturn(response);
 
-        mockMvc.perform(post("/api/teacher/tests/5/questions")
-                        .with(authentication(teacherAuth()))
+        mockMvc.perform(post("/api/teacher/tests/5/questions").with(asTeacher())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -69,16 +71,14 @@ class TeacherQuestionControllerTest {
         );
         when(questionService.getQuestions(1L, 5L)).thenReturn(questions);
 
-        mockMvc.perform(get("/api/teacher/tests/5/questions")
-                        .with(authentication(teacherAuth())))
+        mockMvc.perform(get("/api/teacher/tests/5/questions").with(asTeacher()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].questionText").value("Q1"));
     }
 
     @Test
     void deleteQuestion_returnsNoContent() throws Exception {
-        mockMvc.perform(delete("/api/teacher/tests/5/questions/1")
-                        .with(authentication(teacherAuth())))
+        mockMvc.perform(delete("/api/teacher/tests/5/questions/1").with(asTeacher()))
                 .andExpect(status().isNoContent());
 
         verify(questionService).deleteQuestion(1L, 5L, 1L);
@@ -89,8 +89,7 @@ class TeacherQuestionControllerTest {
         ReorderRequest request = new ReorderRequest(List.of(3L, 1L, 2L));
         when(questionService.reorderQuestions(eq(1L), eq(5L), any())).thenReturn(new MessageResponse("Questions reordered"));
 
-        mockMvc.perform(put("/api/teacher/tests/5/questions/reorder")
-                        .with(authentication(teacherAuth()))
+        mockMvc.perform(put("/api/teacher/tests/5/questions/reorder").with(asTeacher())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())

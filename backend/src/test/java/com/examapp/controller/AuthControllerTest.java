@@ -2,7 +2,6 @@ package com.examapp.controller;
 
 import com.examapp.dto.auth.*;
 import com.examapp.exception.DuplicateResourceException;
-import com.examapp.exception.GlobalExceptionHandler;
 import com.examapp.exception.UnauthorizedException;
 import com.examapp.security.JwtAuthenticationFilter;
 import com.examapp.security.JwtUtil;
@@ -12,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.bean.MockBean;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -100,7 +99,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void login_invalidCredentials_returnsForbidden() throws Exception {
+    void login_invalidCredentials_returnsUnauthorized() throws Exception {
         LoginRequest request = new LoginRequest("john@test.com", "wrong");
         when(authService.login(any())).thenThrow(new UnauthorizedException("Invalid credentials"));
 
