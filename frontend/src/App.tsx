@@ -1,13 +1,13 @@
 import { BrowserRouter as Router } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import './App.css';
-import TeacherDashboard from './pages/TeacherDashboard';
+import AppRoutes from './routes';
 
 function App() {
   return (
     <AuthProvider>
       <Router>
-        <TeacherDashboard/>
+        <AppRoutes/>
       </Router>
     </AuthProvider>
   );

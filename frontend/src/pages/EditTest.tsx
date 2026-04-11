@@ -1,56 +1,38 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { 
-  Plus, Trash2, Save, ArrowLeft, CheckCircle2, Circle, 
-  ChevronUp, ChevronDown, Loader2, Edit3, X, 
-  LayoutDashboard, FileText, Clock, Award, MoreVertical,
-  GripHorizontal, Copy
+import { useParams, useNavigate } from 'react-router-dom';
+import {
+  Plus, Trash2, ArrowLeft, CheckCircle2,
+  ChevronUp, ChevronDown, Loader2, Edit3, X,
+  FileText, Award
 } from 'lucide-react';
-import * as testService from '../services/testService';
-
-interface Question {
-  id: string;
-  question_text: string;
-  points: number;
-  options: string[];
-  correct_option: number;
-}
+import { QuestionService, type Question } from '../services/teacherQuestion';
 
 const EditTest: React.FC = () => {
   const { testId } = useParams<{ testId: string }>();
   const navigate = useNavigate();
-  
-  const [testTitle, setTestTitle] = useState("Midterm Examination - Web Development");
+
+  const [testTitle,] = useState("Midterm Examination");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
 
-  // Initial Fetch with Mock Data
+  const showNotification = (message: string, type: 'success' | 'error') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 3000);
+  };
+
   useEffect(() => {
     const loadData = async () => {
       try {
         if (testId) {
-          const data = await testService.getQuestions(testId).catch(() => [
-            { 
-              id: '1', 
-              question_text: 'What does HTML stand for?', 
-              points: 2, 
-              options: ['Hyper Text Markup Language', 'High Tech Machine Language', 'Hyperlink Text Management', 'Home Tool Markup Language'], 
-              correct_option: 0 
-            },
-            { 
-              id: '2', 
-              question_text: 'Which tag is used for an unordered list?', 
-              points: 1, 
-              options: ['<ol>', '<ul>', '<li>', '<list>'], 
-              correct_option: 1 
-            }
-          ]);
-          setQuestions(data);
+          const data = await QuestionService.getQuestions(testId);
+          setQuestions(data?.sort((a, b) => a.displayOrder - b.displayOrder) || []);
         }
       } catch (err) {
-        console.error("Failed to load", err);
+        console.error("Failed to load questions", err);
+        showNotification("Failed to load questions from server.", "error");
       } finally {
         setLoading(false);
       }
@@ -58,21 +40,59 @@ const EditTest: React.FC = () => {
     loadData();
   }, [testId]);
 
-  const totalPoints = questions.reduce((sum, q) => sum + q.points, 0);
+  const totalPoints = questions.reduce((sum, q) => sum + (Number(q.point) || 0), 0);
 
   const handleSaveQuestion = async (q: Question) => {
+    // Validation
+    if (!q.questionText.trim()) {
+      showNotification("Please enter the question content.", "error");
+      return;
+    }
+    if (!q.options.some(opt => opt.isCorrect)) {
+      showNotification("Please mark at least one option as correct.", "error");
+      return;
+    }
+
     setIsSaving(true);
     try {
       if (testId) {
-        if (q.id.startsWith('temp-')) {
-          await testService.addQuestion(testId, q);
+        // 1. Loại bỏ ID tạm thời của options
+        const sanitizedOptions = q.options.map(opt => {
+          if (opt.id < 0) {
+            const { id, ...rest } = opt;
+            return rest;
+          }
+          return opt;
+        });
+
+        // 2. Tách ID của câu hỏi ra, phần còn lại (rest) đưa vào questionDataWithoutId
+        const { id: questionId, ...questionDataWithoutId } = q;
+
+        // 3. Gom lại thành payload sạch sẽ (không chứa id tạm)
+        const payloadToSave = {
+          ...questionDataWithoutId,
+          options: sanitizedOptions
+        };
+
+        if (q.id < 0) {
+          // Gửi POST tạo mới
+          await QuestionService.createQuestion(testId, payloadToSave as any);
+          showNotification("Question created successfully!", "success");
         } else {
-          await testService.updateQuestion(testId, q.id, q);
+          // Gửi PUT cập nhật
+          await QuestionService.updateQuestion(testId, q.id.toString(), payloadToSave as any);
+          showNotification("Question updated successfully!", "success");
         }
+
+        // Fetch lại data 
+        const data = await QuestionService.getQuestions(testId);
+        setQuestions(data?.sort((a, b) => a.displayOrder - b.displayOrder) || []);
         setEditingId(null);
       }
-    } catch (err) {
-      alert("Error saving question");
+    } catch (err: any) {
+      // In lỗi chi tiết ra console để dễ debug nếu backend vẫn báo lỗi
+      console.error("API Error:", err.response?.data || err.message);
+      showNotification("Failed to save the question. Please try again.", "error");
     } finally {
       setIsSaving(false);
     }
@@ -82,17 +102,53 @@ const EditTest: React.FC = () => {
     const newQuestions = [...questions];
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= newQuestions.length) return;
+
+    // Đảo displayOrder
+    const tempOrder = newQuestions[index].displayOrder;
+    newQuestions[index].displayOrder = newQuestions[targetIndex].displayOrder;
+    newQuestions[targetIndex].displayOrder = tempOrder;
+
     [newQuestions[index], newQuestions[targetIndex]] = [newQuestions[targetIndex], newQuestions[index]];
     setQuestions(newQuestions);
+
+    // TODO: Call API to persist reorder (e.g., PUT /api/teacher/tests/{testId}/questions/reorder)
+  };
+
+  const handleDelete = async (e: React.MouseEvent, id: number) => {
+    e.stopPropagation();
+    if (!window.confirm("Are you sure you want to delete this question?")) return;
+    try {
+      if (testId && id > 0) {
+        await QuestionService.deleteQuestion(testId, id.toString());
+      }
+      setQuestions(questions.filter(q => q.id !== id));
+      showNotification("Question deleted.", "success");
+    } catch (error) {
+      console.error(error);
+      showNotification("Failed to delete question.", "error");
+    }
+  }
+
+  const handleCancelEdit = (qId: number) => {
+    // Nếu đang edit câu hỏi mới (chưa lưu), hủy sẽ xóa luôn khỏi state
+    if (qId < 0) {
+      setQuestions(questions.filter(item => item.id !== qId));
+    }
+    setEditingId(null);
   };
 
   const startNewQuestion = () => {
     const newQ: Question = {
-      id: `temp-${Date.now()}`,
-      question_text: '',
-      points: 1,
-      options: ['', '', '', ''],
-      correct_option: 0
+      id: -Date.now(), // ID tạm thời
+      questionText: '',
+      point: 1,
+      displayOrder: questions.length + 1,
+      options: [
+        { id: -1, optionText: '', isCorrect: true, displayOrder: 1 },
+        { id: -2, optionText: '', isCorrect: false, displayOrder: 2 },
+        { id: -3, optionText: '', isCorrect: false, displayOrder: 3 },
+        { id: -4, optionText: '', isCorrect: false, displayOrder: 4 }
+      ]
     };
     setQuestions([...questions, newQ]);
     setEditingId(newQ.id);
@@ -108,11 +164,20 @@ const EditTest: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Premium Header */}
+    <div className="min-h-screen bg-slate-50 flex flex-col relative">
+      
+      {/* Toast Notification */}
+      {notification && (
+        <div className={`fixed top-20 right-8 z-50 px-6 py-3 rounded-xl shadow-lg font-bold text-sm transform transition-all animate-in fade-in slide-in-from-top-4 ${
+          notification.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+        }`}>
+          {notification.message}
+        </div>
+      )}
+
       <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 px-8 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-6">
-          <button 
+          <button
             onClick={() => navigate('/teacher/dashboard')}
             className="flex items-center gap-2 text-slate-400 hover:text-slate-900 transition-colors font-bold text-sm"
           >
@@ -121,53 +186,19 @@ const EditTest: React.FC = () => {
           </button>
           <div className="h-6 w-[1px] bg-slate-200" />
           <div>
-            <input 
-              value={testTitle}
-              onChange={(e) => setTestTitle(e.target.value)}
-              className="text-xl font-black text-slate-900 bg-transparent border-none focus:ring-0 p-0 w-full md:w-[400px] placeholder-slate-300"
-              placeholder="Enter test title..."
-            />
+            <h1 className="text-xl font-black text-slate-900">{testTitle || "Assessment Settings"}</h1>
           </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="hidden md:flex items-center gap-2 mr-4 text-slate-400 text-xs font-bold uppercase tracking-widest">
-            {isSaving ? <Loader2 className="w-3 h-3 animate-spin"/> : <CheckCircle2 className="w-3 h-3 text-green-500" />}
-            {isSaving ? "Saving changes..." : "All changes saved"}
-          </div>
-          <button className="flex items-center gap-2 px-6 py-2.5 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-full transition-all shadow-xl shadow-slate-200 uppercase tracking-widest">
-            <Save className="w-4 h-4" />
-            Publish Test
-          </button>
         </div>
       </header>
 
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Sidebar: Quick Navigation */}
-        <aside className="hidden lg:flex w-20 flex-col items-center py-8 border-r border-slate-200 bg-white gap-4">
-          {questions.map((_, i) => (
-            <button 
-              key={i}
-              className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm transition-all ${editingId === questions[i].id ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}
-            >
-              {i + 1}
-            </button>
-          ))}
-          <button 
-            onClick={startNewQuestion}
-            className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:text-primary hover:bg-primary/5 flex items-center justify-center border-2 border-dashed border-slate-200 transition-all mt-2"
-          >
-            <Plus className="w-5 h-5" />
-          </button>
-        </aside>
-
         {/* Main Content Area */}
         <main className="flex-1 overflow-y-auto p-8 bg-[#fcfdfe]">
-          <div className="max-w-3xl mx-auto space-y-10">
+          <div className="max-w-4xl mx-auto space-y-10">
             {questions.map((q, index) => (
               <div key={q.id} className="scroll-mt-24">
                 {editingId === q.id ? (
-                  /* ENHANCED EDITING MODE */
+                  /* EDITING MODE */
                   <div className="bg-white rounded-[2rem] border-2 border-primary shadow-2xl shadow-primary/5 p-8 md:p-10 animate-in fade-in zoom-in duration-200">
                     <div className="flex items-center justify-between mb-8">
                       <div className="flex items-center gap-3">
@@ -175,19 +206,19 @@ const EditTest: React.FC = () => {
                         <div className="h-1 w-1 bg-slate-300 rounded-full" />
                         <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">Editor Mode</span>
                       </div>
-                      <button onClick={() => setEditingId(null)} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X className="w-5 h-5 text-slate-400" /></button>
+                      <button onClick={() => handleCancelEdit(q.id)} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X className="w-5 h-5 text-slate-400" /></button>
                     </div>
 
                     <div className="space-y-8">
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div className="md:col-span-3 space-y-2">
                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Question Content</label>
-                          <textarea 
-                            className="w-full bg-slate-50 border-none rounded-2xl p-5 text-slate-900 font-bold text-lg focus:ring-4 focus:ring-primary/5 min-h-[120px] transition-all"
-                            value={q.question_text}
+                          <textarea
+                            className="w-full bg-slate-50 border border-slate-200/60 rounded-2xl p-5 text-slate-900 font-bold text-lg focus:ring-4 focus:ring-primary/10 focus:border-primary min-h-[120px] transition-all"
+                            value={q.questionText}
                             onChange={(e) => {
                               const newQs = [...questions];
-                              newQs[index].question_text = e.target.value;
+                              newQs[index].questionText = e.target.value;
                               setQuestions(newQs);
                             }}
                             placeholder="Type your question here..."
@@ -197,13 +228,14 @@ const EditTest: React.FC = () => {
                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Point Weight</label>
                           <div className="relative group">
                             <Award className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-primary transition-colors" />
-                            <input 
+                            <input
                               type="number"
-                              className="w-full bg-slate-50 border-none rounded-2xl p-5 pl-12 font-black text-primary text-xl focus:ring-4 focus:ring-primary/5 transition-all"
-                              value={q.points}
+                              min="0"
+                              className="w-full bg-slate-50 border border-slate-200/60 rounded-2xl p-5 pl-12 font-black text-primary text-xl focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all"
+                              value={q.point}
                               onChange={(e) => {
                                 const newQs = [...questions];
-                                newQs[index].points = parseInt(e.target.value) || 0;
+                                newQs[index].point = parseInt(e.target.value) || 0;
                                 setQuestions(newQs);
                               }}
                             />
@@ -215,86 +247,108 @@ const EditTest: React.FC = () => {
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 block">Answer Options & Correct Key</label>
                         <div className="grid gap-3">
                           {q.options.map((opt, optIdx) => (
-                            <div key={optIdx} className={`flex items-center gap-4 p-2 rounded-2xl border transition-all ${q.correct_option === optIdx ? 'border-green-100 bg-green-50/30' : 'border-transparent bg-slate-50/50'}`}>
-                              <button 
+                            <div key={optIdx} className={`flex items-center gap-4 p-2 rounded-2xl border transition-all ${opt.isCorrect ? 'border-green-200 bg-green-50' : 'border-slate-200/60 bg-white hover:border-slate-300'}`}>
+                              <button
                                 onClick={() => {
                                   const newQs = [...questions];
-                                  newQs[index].correct_option = optIdx;
+                                  newQs[index].options = newQs[index].options.map(o => ({ ...o, isCorrect: false }));
+                                  newQs[index].options[optIdx].isCorrect = true;
                                   setQuestions(newQs);
                                 }}
-                                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${q.correct_option === optIdx ? 'bg-green-500 text-white shadow-lg shadow-green-200' : 'bg-white text-slate-200 hover:text-slate-400'}`}
+                                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${opt.isCorrect ? 'bg-green-500 text-white shadow-lg shadow-green-200' : 'bg-slate-100 text-slate-300 hover:text-slate-500 hover:bg-slate-200'}`}
                               >
-                                {q.correct_option === optIdx ? <CheckCircle2 className="w-5 h-5" /> : <div className="w-5 h-5 rounded-full border-2 border-current" />}
+                                {opt.isCorrect ? <CheckCircle2 className="w-5 h-5" /> : <div className="w-5 h-5 rounded-full border-2 border-current" />}
                               </button>
-                              <input 
+                              <input
                                 className="flex-1 bg-transparent border-none rounded-xl py-3 px-2 text-sm font-bold text-slate-700 placeholder-slate-300 focus:ring-0"
-                                value={opt}
+                                value={opt.optionText}
                                 onChange={(e) => {
                                   const newQs = [...questions];
-                                  newQs[index].options[optIdx] = e.target.value;
+                                  newQs[index].options[optIdx].optionText = e.target.value;
                                   setQuestions(newQs);
                                 }}
                                 placeholder={`Input option ${optIdx + 1}...`}
                               />
+                              <button 
+                                  onClick={() => {
+                                      const newQs = [...questions];
+                                      newQs[index].options.splice(optIdx, 1);
+                                      setQuestions(newQs);
+                                  }}
+                                  className="p-2 mr-2 text-slate-300 hover:text-red-500 transition-colors"
+                                  title="Remove option"
+                              >
+                                  <X className="w-4 h-4" />
+                              </button>
                             </div>
                           ))}
                         </div>
                       </div>
 
                       <div className="flex items-center justify-between pt-8 border-t border-slate-100">
-                        <button 
+                        <button
                           onClick={() => {
                             const newQs = [...questions];
-                            newQs[index].options.push('');
+                            newQs[index].options.push({
+                              id: -(Date.now() + Math.random()), // Đảm bảo ID tạm luôn duy nhất
+                              optionText: '',
+                              isCorrect: false,
+                              displayOrder: newQs[index].options.length + 1
+                            });
                             setQuestions(newQs);
                           }}
-                          className="flex items-center gap-2 text-xs font-black text-slate-400 hover:text-primary transition-colors"
+                          className="flex items-center gap-2 text-xs font-black text-slate-400 hover:text-primary transition-colors cursor-pointer"
                         >
                           <Plus className="w-4 h-4" /> ADD NEW OPTION
                         </button>
                         <div className="flex items-center gap-3">
-                          <button onClick={() => setEditingId(null)} className="px-6 py-3 text-slate-400 font-bold text-xs uppercase tracking-widest hover:bg-slate-50 rounded-xl">Cancel</button>
-                          <button 
-                             onClick={() => handleSaveQuestion(q)}
-                             className="px-10 py-3 bg-primary text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-xl shadow-primary/20 hover:bg-primary-hover active:scale-95 transition-all"
+                          <button onClick={() => handleCancelEdit(q.id)}
+                            className="px-6 py-3 text-slate-400 font-bold text-xs uppercase tracking-widest hover:bg-slate-50 rounded-xl cursor-pointer">
+                            Cancel
+                          </button>
+                          <button
+                            onClick={() => handleSaveQuestion(q)}
+                            disabled={isSaving}
+                            className="px-10 py-3 bg-primary text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-xl shadow-primary/20 hover:opacity-90 active:scale-95 transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50"
                           >
-                            Update Question
+                            {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
+                            {q.id < 0 ? 'Create Question' : 'Update Question'}
                           </button>
                         </div>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  /* PREMIUM PREVIEW CARD */
-                  <div className="group relative bg-white rounded-[1.5rem] p-8 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 hover:border-slate-200 transition-all duration-300 cursor-pointer" onClick={() => setEditingId(q.id)}>
+                  /* PREVIEW CARD */
+                  <div className="group relative bg-white rounded-[1.5rem] p-8 border border-slate-200/60 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 hover:border-primary/30 transition-all duration-300 cursor-pointer" onClick={() => setEditingId(q.id)}>
                     <div className="absolute right-6 top-6 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
                       <button onClick={(e) => { e.stopPropagation(); moveQuestion(index, 'up'); }} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-900 rounded-lg"><ChevronUp size={16} /></button>
                       <button onClick={(e) => { e.stopPropagation(); moveQuestion(index, 'down'); }} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-900 rounded-lg"><ChevronDown size={16} /></button>
                       <div className="w-[1px] h-4 bg-slate-200 mx-1" />
                       <button onClick={(e) => { e.stopPropagation(); setEditingId(q.id); }} className="p-2 bg-slate-100 text-slate-600 hover:bg-primary hover:text-white rounded-lg transition-all"><Edit3 size={16} /></button>
-                      <button onClick={(e) => { e.stopPropagation(); }} className="p-2 bg-slate-100 text-slate-600 hover:bg-red-500 hover:text-white rounded-lg transition-all"><Trash2 size={16} /></button>
+                      <button onClick={(e) => handleDelete(e, q.id)} className="p-2 bg-slate-100 text-slate-600 hover:bg-red-500 hover:text-white rounded-lg transition-all"><Trash2 size={16} /></button>
                     </div>
 
                     <div className="flex items-start gap-6">
                       <div className="flex flex-col items-center gap-2">
                         <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center font-black text-slate-400 text-sm border border-slate-100">
-                          {index + 1}
+                          {q.displayOrder || (index + 1)}
                         </div>
                         <div className="h-full w-[2px] bg-slate-50 flex-1 min-h-[40px] rounded-full" />
                       </div>
-                      
+
                       <div className="flex-1 pr-12">
                         <div className="flex items-center gap-3 mb-3">
-                          <span className="bg-slate-900 text-[9px] font-black text-white px-2 py-0.5 rounded tracking-[0.2em] uppercase">PKT: {q.points}</span>
+                          <span className="bg-slate-900 text-[9px] font-black text-white px-2 py-0.5 rounded tracking-[0.2em] uppercase">PKT: {q.point}</span>
                           <span className="text-slate-300 font-bold text-[9px] uppercase tracking-widest">Multiple Choice</span>
                         </div>
-                        <h3 className="text-slate-800 font-bold text-xl mb-6 leading-relaxed">{q.question_text || "Untitled Question"}</h3>
-                        
+                        <h3 className="text-slate-800 font-bold text-xl mb-6 leading-relaxed">{q.questionText || "Untitled Question"}</h3>
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {q.options.filter(o => o).map((opt, i) => (
-                            <div key={i} className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl border ${i === q.correct_option ? 'border-green-100 bg-green-50/50 text-green-700' : 'border-slate-50 bg-slate-50/30 text-slate-400'}`}>
-                              <div className={`w-2 h-2 rounded-full ${i === q.correct_option ? 'bg-green-500' : 'bg-slate-200'}`} />
-                              <span className={`text-sm font-bold ${i === q.correct_option ? 'text-green-700' : 'text-slate-500'}`}>{opt}</span>
+                          {q.options.map((opt, i) => (
+                            <div key={i} className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl border ${opt.isCorrect ? 'border-green-200 bg-green-50 text-green-700' : 'border-slate-100 bg-slate-50 text-slate-500'}`}>
+                              <div className={`w-2 h-2 rounded-full ${opt.isCorrect ? 'bg-green-500' : 'bg-slate-200'}`} />
+                              <span className={`text-sm font-bold ${opt.isCorrect ? 'text-green-700' : 'text-slate-500'}`}>{opt.optionText || '(Empty option)'}</span>
                             </div>
                           ))}
                         </div>
@@ -305,19 +359,21 @@ const EditTest: React.FC = () => {
               </div>
             ))}
 
-            {/* Premium Add Question Button */}
-            <button 
-              onClick={startNewQuestion}
-              className="w-full py-16 bg-white border-2 border-dashed border-slate-200 rounded-[2rem] text-slate-400 hover:text-primary hover:border-primary/50 hover:bg-primary/5 transition-all flex flex-col items-center justify-center gap-4 group shadow-sm hover:shadow-xl"
-            >
-              <div className="w-16 h-16 bg-slate-50 text-slate-300 rounded-3xl flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary transition-all rotate-3 group-hover:rotate-0">
-                <Plus className="w-8 h-8" />
-              </div>
-              <div>
-                <p className="font-black text-sm uppercase tracking-widest">Add New Question</p>
-                <p className="text-[10px] font-bold text-slate-300 uppercase mt-1">Select multiple choice or short answer</p>
-              </div>
-            </button>
+            {/* Add Question Button (Ẩn nếu đang chỉnh sửa một câu hỏi mới tạo) */}
+            {(!editingId || editingId > 0) && (
+              <button
+                onClick={startNewQuestion}
+                className="w-full py-16 bg-white border-2 border-dashed border-slate-200 rounded-[2rem] text-slate-400 hover:text-primary hover:border-primary/50 hover:bg-primary/5 transition-all flex flex-col items-center justify-center gap-4 group shadow-sm hover:shadow-xl"
+              >
+                <div className="w-16 h-16 bg-slate-50 text-slate-400 rounded-3xl flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary transition-all rotate-3 group-hover:rotate-0">
+                  <Plus className="w-8 h-8" />
+                </div>
+                <div>
+                  <p className="font-black text-sm uppercase tracking-widest">Add New Question</p>
+                  <p className="text-[10px] font-bold text-slate-300 uppercase mt-1">Select multiple choice or short answer</p>
+                </div>
+              </button>
+            )}
           </div>
         </main>
 
@@ -325,7 +381,7 @@ const EditTest: React.FC = () => {
         <aside className="hidden xl:flex w-80 flex-col p-8 border-l border-slate-200 bg-white gap-8 overflow-y-auto">
           <div className="space-y-6">
             <h2 className="text-xs font-black text-slate-900 uppercase tracking-widest">Test Summary</h2>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100">
                 <Award className="w-5 h-5 text-primary mb-3" />
@@ -337,27 +393,6 @@ const EditTest: React.FC = () => {
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Questions</p>
                 <p className="text-2xl font-black text-slate-900">{questions.length}</p>
               </div>
-            </div>
-
-            <div className="bg-slate-900 p-6 rounded-[2rem] text-white shadow-2xl shadow-slate-300 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-4 opacity-10">
-                <Clock size={80} />
-              </div>
-              <div className="relative z-10">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Estimated time</p>
-                <p className="text-3xl font-black mb-1 italic">45:00</p>
-                <p className="text-[10px] font-bold text-slate-500">Suggested duration</p>
-              </div>
-            </div>
-
-            <div className="space-y-4 pt-6 border-t border-slate-100">
-              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Quick Actions</h3>
-              <button className="w-full flex items-center gap-3 p-4 bg-slate-50 hover:bg-slate-100 rounded-2xl transition-all text-sm font-bold text-slate-700">
-                <Copy className="w-4 h-4 text-slate-400" /> Duplicate Test
-              </button>
-              <button className="w-full flex items-center gap-3 p-4 bg-red-50 hover:bg-red-100 rounded-2xl transition-all text-sm font-bold text-red-600">
-                <Trash2 className="w-4 h-4 text-red-400" /> Delete Test
-              </button>
             </div>
           </div>
         </aside>

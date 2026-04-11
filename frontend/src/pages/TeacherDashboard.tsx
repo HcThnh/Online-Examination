@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, FileText, Trash2, KeyRound, Clock } from 'lucide-react';
-import { TestService, type TestItem } from '../services/testService';
+import { TestService, type TestItem } from '../services/teacherTestService';
 
 export const TeacherDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -38,6 +38,7 @@ export const TeacherDashboard: React.FC = () => {
   const handleDeleteTest = async (e: React.MouseEvent, testId: string) => {
     e.stopPropagation();
     const confirmDelete = window.confirm('Are you sure you want to delete this test?');
+
 
     if (confirmDelete) {
       try {
@@ -116,7 +117,9 @@ export const TeacherDashboard: React.FC = () => {
 
                   <button
                     onClick={(e) => handleDeleteTest(e, test.id)}
-                    className="absolute top-6 right-6 p-2 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                    className="absolute top-6 
+                    right-6 p-2 text-slate-300 hover:text-red-600 
+                    hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
                     aria-label="Delete test"
                   >
                     <Trash2 size={18} />
@@ -133,8 +136,8 @@ export const TeacherDashboard: React.FC = () => {
                       {test.passcode}
                     </span>
                   </div>
-
-                  <div className="flex items-center justify-between text-xs text-slate-400 font-medium">
+                  
+                  <div className="flex items-center justify-between text-sm text-gray-500">
                     <span className="flex items-center gap-1.5">
                       <FileText size={16} className="text-slate-300" />
                       {test.questionCount} Questions

@@ -1,7 +1,6 @@
 import api from './api';
 
 export const login = async (credentials: any) => {
-  // Hack để bạn vẫn có thể test UI khi không bật backend
   if (credentials.email === 'teacher@test.com' && credentials.password === 'password') {
     return {
       token: 'mock-token',
@@ -9,7 +8,6 @@ export const login = async (credentials: any) => {
     };
   }
 
-  // Gọi API thật
   const response = await api.post('/auth/login', {
     email: credentials.email,
     password: credentials.password
@@ -18,7 +16,6 @@ export const login = async (credentials: any) => {
 };
 
 export const register = async (userData: any) => {
-  // Chuẩn hóa tên trường theo Java DTO (name thay vì full_name)
   const response = await api.post('/auth/register', {
     name: userData.full_name || userData.name,
     email: userData.email,
