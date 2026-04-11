@@ -1,6 +1,7 @@
 package com.examapp.service;
 
 import com.examapp.dto.test.CreateTestRequest;
+import com.examapp.dto.test.TestDetailResponse;
 import com.examapp.dto.test.TestResponse;
 import com.examapp.dto.test.TestSummaryResponse;
 import com.examapp.entity.Exam;
