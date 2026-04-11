@@ -26,6 +26,9 @@ jobs:
           cache: maven
           cache-dependency-path: backend/pom.xml
 
+      - name: Checkstyle
+        run: ./mvnw checkstyle:check -B
+
       - name: Compile
         run: ./mvnw compile -B -q
 

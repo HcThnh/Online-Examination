@@ -1,6 +1,7 @@
 package com.examapp.service;
 
-import com.examapp.dto.question.*;
+import com.examapp.dto.question.QuestionRequest;
+import com.examapp.dto.question.QuestionResponse;
 import com.examapp.dto.MessageResponse;
 import com.examapp.entity.AnswerOption;
 import com.examapp.entity.Exam;
