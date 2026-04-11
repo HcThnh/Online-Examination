@@ -6,9 +6,9 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import StudentDashboard from './pages/StudentDashboard';
 import TakeTest from './pages/TakeTest';
-import TeacherDashboard from './pages/TeacherDashboard';
 import CreateTest from './pages/CreateTest';
 import EditTest from './pages/EditTest';
+import {TeacherDashboard} from './pages/TeacherDashboard';
 
 const AppRoutes = () => {
   return (
