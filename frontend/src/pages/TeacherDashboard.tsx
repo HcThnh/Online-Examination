@@ -1,39 +1,8 @@
-<<<<<<< Updated upstream
+// TeacherDashboard.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, FileText, Trash2, KeyRound, Clock } from 'lucide-react';
-
-interface TestItem {
-  id: string;
-  title: string;
-  passcode: string;
-  questionCount: number;
-  createdAt: string;
-}
-
-const MOCK_TESTS: TestItem[] = [
-  {
-    id: 't-001',
-    title: 'Software Engineering Midterm',
-    passcode: 'MID2026',
-    questionCount: 40,
-    createdAt: '2026-04-10T08:00:00Z',
-  },
-  {
-    id: 't-002',
-    title: 'Agile & Scrum Quiz 1',
-    passcode: 'AGILE101',
-    questionCount: 15,
-    createdAt: '2026-04-05T14:30:00Z',
-  },
-  {
-    id: 't-003',
-    title: 'Final Exam - Database Systems',
-    passcode: 'DBFINAL',
-    questionCount: 60,
-    createdAt: '2026-04-01T09:15:00Z',
-  },
-];
+import { TestService, type TestItem } from '../services/testService';
 
 export const TeacherDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -44,15 +13,14 @@ export const TeacherDashboard: React.FC = () => {
     const fetchTests = async () => {
       setIsLoading(true);
       try {
-        setTimeout(() => {
-          const sorted = [...MOCK_TESTS].sort(
-            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          );
-          setTests(sorted);
-          setIsLoading(false);
-        }, 600);
+        const data = await TestService.getTests();
+        const sorted = data.sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        setTests(sorted);
       } catch (error) {
         console.error('Failed to fetch tests', error);
+      } finally {
         setIsLoading(false);
       }
     };
@@ -67,11 +35,18 @@ export const TeacherDashboard: React.FC = () => {
     navigate(`/dashboard/tests/${testId}/edit`);
   };
 
-  const handleDeleteTest = (e: React.MouseEvent, testId: string) => {
+  const handleDeleteTest = async (e: React.MouseEvent, testId: string) => {
     e.stopPropagation();
     const confirmDelete = window.confirm('Are you sure you want to delete this test?');
+    
     if (confirmDelete) {
-      setTests(tests.filter((t) => t.id !== testId));
+      try {
+        await TestService.deleteTest(testId);
+        setTests(tests.filter((t) => t.id !== testId));
+      } catch (error) {
+        console.error('Failed to delete test', error);
+        alert('Failed to delete the test. Please try again.');
+      }
     }
   };
 
@@ -118,7 +93,9 @@ export const TeacherDashboard: React.FC = () => {
             </p>
             <button
               onClick={handleCreateTest}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-md font-medium transition-colors shadow-sm"
+              className="flex items-center gap-2 bg-blue-600 
+              hover:bg-blue-700 text-white px-6 py-2.5 rounded-md font-medium transition-colors 
+              shadow-sm cursor-pointer"
             >
               <Plus size={18} />
               Create your first test
@@ -173,15 +150,6 @@ export const TeacherDashboard: React.FC = () => {
           </div>
         )}
       </div>
-=======
-import React from 'react';
-
-const TeacherDashboard: React.FC = () => {
-  return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold mb-4">Teacher Dashboard</h1>
-      <p className="text-slate-600">Review class results and manage your tests.</p>
->>>>>>> Stashed changes
     </div>
   );
 };

@@ -8,7 +8,7 @@ import StudentDashboard from './pages/StudentDashboard';
 import TakeTest from './pages/TakeTest';
 import CreateTest from './pages/CreateTest';
 import EditTest from './pages/EditTest';
-import {TeacherDashboard} from './pages/TeacherDashboard';
+import TeacherDashboard from './pages/TeacherDashboard';
 
 const AppRoutes = () => {
   return (

@@ -63,6 +63,8 @@ docker compose down -v
 Override via environment variables:
 
 ```bash
+backend\README.md
+D:\Documents\BK4\cnpmnc\lab\online-examination-application\backend\README.md
 DB_URL=jdbc:postgresql://localhost:5432/mydb \
 DB_USERNAME=myuser \
 DB_PASSWORD=mypass \
