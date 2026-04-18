@@ -51,16 +51,17 @@ export interface TestStatistics {
 }
 
 export interface QuestionAnalysis {
-  questionId: string;
-  questionOrder: number;
+  questionId: number;
+  questionOrder?: number;
   questionText: string;
-  pointValue: number;
+  points: number;           // BE-14.1 says "points"
   correctRate: number;
-  options: {
-    id: string;
-    text: string;
+  totalAnswers: number;
+  optionDistribution: {    // BE-14.1 says "optionDistribution"
+    optionId: number;
+    optionText: string;
     isCorrect: boolean;
-    pickCount: number;
-    pickPercentage: number;
+    count: number;
+    percentage: number;
   }[];
 }

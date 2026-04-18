@@ -39,7 +39,7 @@ const QuestionAnalysisScreen: React.FC = () => {
   const [sortBy, setSortBy] = useState<'order' | 'hardest' | 'easiest'>('order');
   
   // Expanded questions state tracking
-  const [expandedQs, setExpandedQs] = useState<Record<string, boolean>>({});
+  const [expandedQs, setExpandedQs] = useState<Record<number, boolean>>({});
 
   // Feature: Mock Data Toggle
   const USE_MOCK_DATA = false; // Switched to false as requested
@@ -53,42 +53,45 @@ const QuestionAnalysisScreen: React.FC = () => {
         setTimeout(() => {
           setQuestions([
             {
-              questionId: 'q1',
+              questionId: 1,
               questionOrder: 1,
               questionText: 'What is the primary function of Mitochondria in a cell?',
-              pointValue: 10,
+              points: 10,
               correctRate: 85,
-              options: [
-                { id: 'o1', text: 'Generate energy (ATP)', isCorrect: true, pickCount: 85, pickPercentage: 85 },
-                { id: 'o2', text: 'Synthesize proteins', isCorrect: false, pickCount: 10, pickPercentage: 10 },
-                { id: 'o3', text: 'Store genetic information', isCorrect: false, pickCount: 2, pickPercentage: 2 },
-                { id: 'o4', text: 'Break down cellular waste', isCorrect: false, pickCount: 3, pickPercentage: 3 },
+              totalAnswers: 100,
+              optionDistribution: [
+                { optionId: 1, optionText: 'Generate energy (ATP)', isCorrect: true, count: 85, percentage: 85 },
+                { optionId: 2, optionText: 'Synthesize proteins', isCorrect: false, count: 10, percentage: 10 },
+                { optionId: 3, optionText: 'Store genetic information', isCorrect: false, count: 2, percentage: 2 },
+                { optionId: 4, optionText: 'Break down cellular waste', isCorrect: false, count: 3, percentage: 3 },
               ]
             },
             {
-              questionId: 'q2',
+              questionId: 2,
               questionOrder: 2,
               questionText: 'Which planet is known as the Red Planet and why?',
-              pointValue: 15,
+              points: 15,
               correctRate: 55,
-              options: [
-                { id: 'o1', text: 'Jupiter, due to its Great Red Spot', isCorrect: false, pickCount: 20, pickPercentage: 20 },
-                { id: 'o2', text: 'Mars, due to iron oxide on its surface', isCorrect: true, pickCount: 55, pickPercentage: 55 },
-                { id: 'o3', text: 'Venus, due to its thick, hot atmosphere', isCorrect: false, pickCount: 15, pickPercentage: 15 },
-                { id: 'o4', text: 'Saturn, due to the reflection of its rings', isCorrect: false, pickCount: 10, pickPercentage: 10 },
+              totalAnswers: 100,
+              optionDistribution: [
+                { optionId: 5, optionText: 'Jupiter, due to its Great Red Spot', isCorrect: false, count: 20, percentage: 20 },
+                { optionId: 6, optionText: 'Mars, due to iron oxide on its surface', isCorrect: true, count: 55, percentage: 55 },
+                { optionId: 7, optionText: 'Venus, due to its thick, hot atmosphere', isCorrect: false, count: 15, percentage: 15 },
+                { optionId: 8, optionText: 'Saturn, due to the reflection of its rings', isCorrect: false, count: 10, percentage: 10 },
               ]
             },
             {
-              questionId: 'q3',
+              questionId: 3,
               questionOrder: 3,
               questionText: 'Who wrote the play "Romeo and Juliet"?',
-              pointValue: 5,
+              points: 5,
               correctRate: 35,
-              options: [
-                { id: 'o1', text: 'Charles Dickens', isCorrect: false, pickCount: 30, pickPercentage: 30 },
-                { id: 'o2', text: 'William Shakespeare', isCorrect: true, pickCount: 35, pickPercentage: 35 },
-                { id: 'o3', text: 'Jane Austen', isCorrect: false, pickCount: 15, pickPercentage: 15 },
-                { id: 'o4', text: 'Mark Twain', isCorrect: false, pickCount: 20, pickPercentage: 20 },
+              totalAnswers: 100,
+              optionDistribution: [
+                { optionId: 9, optionText: 'Charles Dickens', isCorrect: false, count: 30, percentage: 30 },
+                { optionId: 10, optionText: 'William Shakespeare', isCorrect: true, count: 35, percentage: 35 },
+                { optionId: 11, optionText: 'Jane Austen', isCorrect: false, count: 15, percentage: 15 },
+                { optionId: 12, optionText: 'Mark Twain', isCorrect: false, count: 20, percentage: 20 },
               ]
             }
           ]);
@@ -113,7 +116,7 @@ const QuestionAnalysisScreen: React.FC = () => {
     fetchAnalysis();
   }, [testId, USE_MOCK_DATA]);
 
-  const toggleExpand = (questionId: string) => {
+  const toggleExpand = (questionId: number) => {
     setExpandedQs((prev) => ({
       ...prev,
       [questionId]: !prev[questionId]
@@ -121,7 +124,7 @@ const QuestionAnalysisScreen: React.FC = () => {
   };
 
   const sortedQuestions = [...questions].sort((a, b) => {
-    if (sortBy === 'order') return a.questionOrder - b.questionOrder;
+    if (sortBy === 'order') return (a.questionOrder ?? 0) - (b.questionOrder ?? 0);
     if (sortBy === 'hardest') return a.correctRate - b.correctRate;
     if (sortBy === 'easiest') return b.correctRate - a.correctRate;
     return 0;
@@ -198,10 +201,10 @@ const QuestionAnalysisScreen: React.FC = () => {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1.5">
                       <span className="bg-slate-100 text-slate-600 text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wider">
-                        Question {q.questionOrder}
+                        Question {q.questionOrder ?? '—'}
                       </span>
                       <span className="text-slate-400 text-xs font-semibold px-1 rounded-full border border-slate-200">
-                        {q.pointValue} pts
+                        {q.points} pts
                       </span>
                     </div>
                     <h3 className="font-semibold text-slate-900 text-base leading-relaxed">
@@ -239,9 +242,9 @@ const QuestionAnalysisScreen: React.FC = () => {
                     </h4>
                     
                     <div className="space-y-3">
-                      {q.options.map((opt) => (
+                      {(q.optionDistribution ?? []).map((opt) => (
                         <div 
-                          key={opt.id} 
+                          key={opt.optionId} 
                           className={`flex items-center justify-between p-3 rounded-xl border ${
                             opt.isCorrect 
                               ? 'bg-green-50 border-green-100' 
@@ -255,7 +258,7 @@ const QuestionAnalysisScreen: React.FC = () => {
                               <XCircle size={18} className="text-slate-300 flex-shrink-0" />
                             )}
                             <span className={`text-sm font-medium ${opt.isCorrect ? 'text-green-800' : 'text-slate-600'}`}>
-                              {opt.text}
+                              {opt.optionText}
                             </span>
                           </div>
                           
@@ -265,12 +268,12 @@ const QuestionAnalysisScreen: React.FC = () => {
                                 className={`h-full rounded-full transition-all duration-700 ${
                                   opt.isCorrect ? 'bg-green-400' : 'bg-slate-300'
                                 }`}
-                                style={{ width: `${opt.pickPercentage}%` }}
+                                style={{ width: `${opt.percentage}%` }}
                               />
                             </div>
                             <div className="flex flex-col items-end min-w-[50px]">
-                              <span className="text-sm font-bold text-slate-700">{opt.pickPercentage}%</span>
-                              <span className="text-xs text-slate-500">{opt.pickCount} picks</span>
+                              <span className="text-sm font-bold text-slate-700">{opt.percentage}%</span>
+                              <span className="text-xs text-slate-500">{opt.count} picks</span>
                             </div>
                           </div>
                         </div>
