@@ -27,10 +27,12 @@ const TeacherDashboard: React.FC = () => {
   }, []);
 
   const handleCreateTest = () => navigate('/teacher/create-test');
-  const handleEditTest = (testId: string) => navigate(`/dashboard/tests/${testId}/edit`);
+  const handleEditTest = (testId: string) => {
+    navigate(`/dashboard/tests/${testId}/edit`);
+  };
 
   const handleViewResults = (e: React.MouseEvent, testId: string) => {
-    e.stopPropagation(); // Ngăn click vào card (mở trang edit)
+    e.stopPropagation();
     navigate(`/dashboard/tests/${testId}/results`);
   };
 
@@ -147,7 +149,11 @@ const TeacherDashboard: React.FC = () => {
                   {/* View Results button */}
                   <button
                     onClick={(e) => handleViewResults(e, test.id)}
-                    className="w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-[#0056D2]/20 text-[#0056D2] text-sm font-semibold hover:bg-[#0056D2] hover:text-white hover:border-[#0056D2] transition-all cursor-pointer"
+                    className="w-full flex items-center justify-center gap-2 mt-1 py-2 rounded-xl
+                    border border-primary/20 text-primary text-sm font-semibold
+                    hover:bg-primary hover:text-white hover:border-primary
+                    transition-all cursor-pointer"
+                    aria-label="View class results"
                   >
                     <BarChart2 size={15} />
                     View Results
