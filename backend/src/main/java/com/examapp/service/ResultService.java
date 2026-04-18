@@ -43,7 +43,9 @@ public class ResultService {
         String sortField = mapSortField(sort);
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortField));
 
-        Page<TestAttempt> attemptPage = testAttemptRepository.findByExamIdWithSearch(testId, search, pageable);
+        Page<TestAttempt> attemptPage = (search == null || search.isBlank())
+                ? testAttemptRepository.findByExamIdPaged(testId, pageable)
+                : testAttemptRepository.findByExamIdWithSearch(testId, search, pageable);
 
         List<ClassResultsResponse.StudentResultDto> results = attemptPage.getContent().stream()
                 .map(ta -> {

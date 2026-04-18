@@ -43,7 +43,7 @@ public class TeacherResultController {
     @GetMapping("/statistics")
     @Operation(summary = "Get class statistics", description = "Returns aggregate stats: average, highest, lowest, pass rate, and score distribution")
     public ResponseEntity<ClassStatisticsResponse> getStatistics(Authentication auth,
-                                                                   @PathVariable Long testId) {
+            @PathVariable Long testId) {
         Long teacherId = (Long) auth.getPrincipal();
         return ResponseEntity.ok(resultService.getStatistics(teacherId, testId));
     }
@@ -51,7 +51,7 @@ public class TeacherResultController {
     @GetMapping("/question-analysis")
     @Operation(summary = "Get per-question analysis", description = "Returns correct rate and answer distribution for each question")
     public ResponseEntity<List<QuestionAnalysisResponse>> getQuestionAnalysis(Authentication auth,
-                                                                                @PathVariable Long testId) {
+            @PathVariable Long testId) {
         Long teacherId = (Long) auth.getPrincipal();
         return ResponseEntity.ok(resultService.getQuestionAnalysis(teacherId, testId));
     }
@@ -59,9 +59,9 @@ public class TeacherResultController {
     @GetMapping("/results/export")
     @Operation(summary = "Export results", description = "Download results as CSV or Excel file")
     public void exportResults(Authentication auth,
-                              @PathVariable Long testId,
-                              @RequestParam(defaultValue = "csv") String format,
-                              HttpServletResponse response) throws IOException {
+            @PathVariable Long testId,
+            @RequestParam(defaultValue = "csv") String format,
+            HttpServletResponse response) throws IOException {
         Long teacherId = (Long) auth.getPrincipal();
         if ("xlsx".equalsIgnoreCase(format)) {
             exportService.exportExcel(teacherId, testId, response);
