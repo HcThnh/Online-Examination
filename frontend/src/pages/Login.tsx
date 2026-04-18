@@ -34,8 +34,7 @@ const Login: React.FC = () => {
 
     try {
       const data = await loginApi(formData);
-      localStorage.setItem('token', data.token);
-      loginContext(data.user);
+      loginContext({ token: data.token, user: data.user });
       navigate('/teacher/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Invalid email or password. Please try again.');
