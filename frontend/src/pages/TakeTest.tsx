@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { User, ClipboardList, ArrowRight, AlertCircle, Clock, BookOpen, CheckCircle2, Circle } from 'lucide-react';
 import { StudentService, type Question } from '../services/studentService';
 
 const TakeTest: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // attemptId comes from AccessTest via navigation state
+  const attemptId: number | undefined = location.state?.attemptId;
   
   const [step, setStep] = useState<'welcome' | 'exam'>('welcome');
   const [studentInfo, setStudentInfo] = useState({ name: '', studentId: '' });
@@ -54,6 +58,12 @@ const TakeTest: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    if (!attemptId) {
+      alert("Session expired or invalid. Please re-enter the test via passcode.");
+      navigate('/access-test');
+      return;
+    }
+
     const isConfirmed = window.confirm("Are you sure you want to submit the test? You cannot change your answers after submission.");
     if (!isConfirmed) return;
 
@@ -64,9 +74,8 @@ const TakeTest: React.FC = () => {
 
     try {
       setIsLoading(true);
-      await StudentService.submitTestAnswer(Number(id), answersArray);
-      alert("Test submitted successfully!");
-      navigate('/student/dashboard');
+      const result = await StudentService.submitTestAnswer(attemptId, answersArray);
+      navigate('/my-results', { state: { submitted: true, attemptId: result?.attemptId ?? attemptId } });
     } catch (err) {
       console.error(err);
       alert("Failed to submit the test. Please try again.");

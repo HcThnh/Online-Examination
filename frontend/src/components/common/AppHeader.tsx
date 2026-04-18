@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { GraduationCap, LogOut, User } from 'lucide-react';
+import { GraduationCap, LogOut, User, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const AppHeader: React.FC = () => {
@@ -45,6 +45,19 @@ const AppHeader: React.FC = () => {
               {displayName}
             </span>
           </div>
+
+          {/* Divider */}
+          <div className="hidden sm:block h-5 w-px bg-slate-200" />
+
+          {/* Change Password */}
+          <button
+            onClick={() => navigate('/teacher/change-password')}
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-semibold text-slate-500 hover:text-[#0056D2] hover:bg-blue-50 transition-all cursor-pointer"
+            aria-label="Change Password"
+          >
+            <ShieldCheck size={15} />
+            <span>Change Password</span>
+          </button>
 
           {/* Divider */}
           <div className="hidden sm:block h-5 w-px bg-slate-200" />
