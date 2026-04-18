@@ -33,8 +33,8 @@ export const StudentService = {
         return response.data;
     },
 
-    submitTestAnswer: async (attemptId: number, answers: { questionId: number, optionId: number }[]) => {
-        const response = await api.post(`/student/attempts/${attemptId}/submit`, answers);
+    submitTestAnswer: async (testId: number, answers: { questionId: number, selectedOptionId: number }[]) => {
+        const response = await api.post(`/student/tests/${testId}/submit`, { answers });
         return response.data;
     },
 

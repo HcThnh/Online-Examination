@@ -8,8 +8,8 @@ const TakeTest: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // attemptId comes from AccessTest via navigation state
-  const attemptId: number | undefined = location.state?.attemptId;
+  // attemptId is persisted in localStorage (set by AccessTest)
+  // Not needed for submit - we use testId from URL
   
   const [step, setStep] = useState<'welcome' | 'exam'>('welcome');
   const [studentInfo, setStudentInfo] = useState({ name: '', studentId: '' });
@@ -58,27 +58,27 @@ const TakeTest: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    if (!attemptId) {
-      alert("Session expired or invalid. Please re-enter the test via passcode.");
-      navigate('/access-test');
-      return;
-    }
-
     const isConfirmed = window.confirm("Are you sure you want to submit the test? You cannot change your answers after submission.");
     if (!isConfirmed) return;
 
     const answersArray = Object.entries(answers).map(([qId, oId]) => ({
       questionId: Number(qId),
-      optionId: oId
+      selectedOptionId: oId   // BE-9.1 expects selectedOptionId
     }));
 
     try {
       setIsLoading(true);
-      const result = await StudentService.submitTestAnswer(attemptId, answersArray);
-      navigate('/my-results', { state: { submitted: true, attemptId: result?.attemptId ?? attemptId } });
-    } catch (err) {
+      // BE-9.1: POST /student/tests/{testId}/submit
+      const result = await StudentService.submitTestAnswer(Number(id), answersArray);
+      // Navigate to result page with the attemptId returned by backend
+      navigate(`/results/${result.attemptId}`);
+    } catch (err: any) {
       console.error(err);
-      alert("Failed to submit the test. Please try again.");
+      if (err.response?.status === 409) {
+        alert("You have already submitted this test.");
+      } else {
+        alert("Failed to submit the test. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }

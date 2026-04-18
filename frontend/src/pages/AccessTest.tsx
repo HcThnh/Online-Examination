@@ -6,7 +6,6 @@ import { KeyRound, ArrowRight, Loader2, AlertCircle, ShieldCheck } from 'lucide-
 interface AccessResponse {
     token: string;
     testId: number;
-    attemptId: number;
     testTitle: string;
     studentId: number;
 }
@@ -45,10 +44,9 @@ const AccessTest: React.FC = () => {
                 }
             );
 
-            const { token, testId, attemptId } = response.data;
+            const { token, testId } = response.data;
             localStorage.setItem('token', token);
-            // Pass attemptId via navigation state - needed for submit
-            navigate(`/student/test/${testId}`, { state: { attemptId } });
+            navigate(`/student/test/${testId}`);
 
         } catch (err: any) {
             console.error("Access Error:", err);
