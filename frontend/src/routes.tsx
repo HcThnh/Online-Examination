@@ -9,6 +9,7 @@ import TakeTest from './pages/TakeTest';
 import CreateTest from './pages/CreateTest';
 import EditTest from './pages/EditTest';
 import TeacherDashboard from './pages/TeacherDashboard';
+import ChangePassword from './pages/ChangePassword';
 import Result from './pages/Result';
 import DetailResult from './pages/DetailResult';
 import AccessTest from './pages/AccessTest';
@@ -30,6 +31,7 @@ const AppRoutes = () => {
       {/* Teacher Routes */}
       <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
       <Route path="/teacher/create-test" element={<CreateTest />} />
+      <Route path="/teacher/change-password" element={<ChangePassword />} />
       <Route path="/dashboard/tests/:testId/edit" element={<EditTest />} />
 
       {/* Default Redirect */}
