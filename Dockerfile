@@ -17,6 +17,7 @@ COPY backend/pom.xml ./
 RUN mvn dependency:go-offline
 # Copy backend source
 COPY backend/src ./src
+COPY backend/checkstyle.xml ./
 # Create static directory if it doesn't exist and copy frontend build
 RUN mkdir -p src/main/resources/static
 COPY --from=frontend-build /app/frontend/dist/ src/main/resources/static/
