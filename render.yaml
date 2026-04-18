@@ -2,9 +2,9 @@ services:
   # Backend Spring Boot Service
   - type: web
     name: exam-app-backend
-    runtime: java
-    buildCommand: "chmod +x backend/mvnw && cd backend && ./mvnw clean package -DskipTests"
-    startCommand: "java -jar backend/target/online-examination-0.0.1-SNAPSHOT.jar"
+    runtime: docker
+    dockerContext: backend
+    dockerFilePath: backend/Dockerfile
     envVars:
       - key: PORT
         value: 8080
