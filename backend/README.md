@@ -111,11 +111,36 @@ Test passcodes for student access: `MATH101`, `GEO202`, `PY303`, `SCI404`.
 
 ## Running Tests
 
-Tests use an in-memory H2 database, no PostgreSQL needed:
+The suite has two tiers:
+
+- **Unit tests** — controllers and services with mocks / H2. Fast, no Docker.
+- **API integration test** (`ApiIntegrationTest`) — boots the full Spring context, spins up a real Postgres via Testcontainers, loads `db/seed-demo.sql`, and hits the HTTP endpoints.
 
 ```bash
+# Unit tests only (no Docker required)
+./mvnw test -Dtest='!ApiIntegrationTest'
+
+# API integration test only (requires Docker)
+./mvnw test -Dtest=ApiIntegrationTest
+
+# Both
 ./mvnw test
 ```
+
+### Integration test on macOS Docker Desktop
+
+Testcontainers can't auto-detect Docker Desktop's socket on recent macOS versions. Export these two env vars first:
+
+```bash
+export DOCKER_HOST=unix:///Users/$USER/Library/Containers/com.docker.docker/Data/docker.raw.sock
+export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+```
+
+On Linux and CI runners the default socket works — no env vars needed.
+
+### CI
+
+`.github/workflows/backend-ci.yml` runs the stages in sequence: **lint → unit tests → integration tests**. Later stages run only if the previous ones pass.
 
 ## API Overview
 
