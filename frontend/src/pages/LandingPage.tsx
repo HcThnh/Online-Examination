@@ -67,7 +67,7 @@ const LandingPage: React.FC = () => {
 
       const { token, testId } = response.data;
       localStorage.setItem('token', token);
-      navigate(`/student/test/${testId}`);
+      navigate(`/student/test/${testId}`, { state: { studentName: studentName.trim() } });
 
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {

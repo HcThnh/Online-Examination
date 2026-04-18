@@ -14,6 +14,13 @@ const TakeTest: React.FC = () => {
   const [step, setStep] = useState<'welcome' | 'exam'>('welcome');
   const [studentInfo, setStudentInfo] = useState({ name: '', studentId: '' });
   const [error, setError] = useState<string | null>(null);
+
+  // Auto-fill student name if passed from LandingPage
+  useEffect(() => {
+    if (location.state?.studentName) {
+      setStudentInfo(prev => ({ ...prev, name: location.state.studentName }));
+    }
+  }, [location.state]);
   
   const [isLoading, setIsLoading] = useState(true);
   const [testData, setTestData] = useState<Question | null>(null);
@@ -139,6 +146,7 @@ const TakeTest: React.FC = () => {
               )}
 
               <form onSubmit={handleStartExam} className="space-y-4">
+                {/* Only show name input if not already provided, or show as read-only/pre-filled */}
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-slate-700 ml-1">Full Name</label>
                   <div className="relative">
