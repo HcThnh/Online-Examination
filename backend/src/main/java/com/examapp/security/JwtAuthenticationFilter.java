@@ -40,6 +40,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         List.of(new SimpleGrantedAuthority("ROLE_" + role))
                 );
                 SecurityContextHolder.getContext().setAuthentication(auth);
+            } else {
+                request.setAttribute(RestAuthenticationEntryPoint.INVALID_TOKEN_ATTRIBUTE, Boolean.TRUE);
             }
         }
 
