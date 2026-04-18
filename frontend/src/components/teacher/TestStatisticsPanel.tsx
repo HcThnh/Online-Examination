@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer 

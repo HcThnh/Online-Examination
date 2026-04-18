@@ -67,7 +67,10 @@ const TeacherDashboard: React.FC = () => {
           <div className="flex flex-wrap gap-3 mt-4 md:mt-0">
             <button
               onClick={() => navigate('/teacher/change-password')}
-              className="flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-4 py-2.5 rounded font-semibold transition-all shadow-sm"
+              className="flex items-center justify-center 
+              gap-2 bg-white hover:bg-slate-50 text-slate-700 
+              border border-slate-200 px-4 py-2.5 rounded 
+              font-semibold transition-all shadow-sm cursor-pointer"
             >
               <ShieldCheck size={18} className="text-primary" />
               Change Password

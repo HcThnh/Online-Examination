@@ -15,6 +15,7 @@ import AccessTest from './pages/AccessTest';
 import ViewClassResult from './pages/ViewClassResult';
 import ChangePassword from './pages/ChangePassword';
 import QuestionAnalysisScreen from './pages/QuestionAnalysisScreen';
+import TeacherLayout from './components/common/TeacherLayout';
 
 const AppRoutes = () => {
   return (
@@ -34,13 +35,15 @@ const AppRoutes = () => {
       <Route path="/results/:attemptId" element={<DetailResult />} />
       <Route path="/access-test" element={<AccessTest />} />
 
-      {/* Teacher Routes */}
-      <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
-      <Route path="/teacher/create-test" element={<CreateTest />} />
-      <Route path="/teacher/change-password" element={<ChangePassword />} />
-      <Route path="/dashboard/tests/:testId/edit" element={<EditTest />} />
-      <Route path="/dashboard/tests/:testId/results" element={<ViewClassResult />} />
-      <Route path="/dashboard/tests/:testId/question-analysis" element={<QuestionAnalysisScreen />} />
+      {/* Teacher Routes — protected, shows AppHeader */}
+      <Route element={<TeacherLayout />}>
+        <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
+        <Route path="/teacher/create-test" element={<CreateTest />} />
+        <Route path="/teacher/change-password" element={<ChangePassword />} />
+        <Route path="/dashboard/tests/:testId/edit" element={<EditTest />} />
+        <Route path="/dashboard/tests/:testId/results" element={<ViewClassResult />} />
+        <Route path="/dashboard/tests/:testId/question-analysis" element={<QuestionAnalysisScreen />} />
+      </Route>
 
       {/* Default Redirect */}
       <Route path="/" element={<Navigate to="/login" replace />} />
