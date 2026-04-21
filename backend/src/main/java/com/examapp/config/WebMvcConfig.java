@@ -10,11 +10,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
         // Forward all paths that do not contain a period (non-file requests) to index.html
-        registry.addViewController("/{path:[^\\.]*}")
-                .setViewName("forward:/index.html");
+        // registry.addViewController("/{path:[^\\.]*}")
+        //         .setViewName("forward:/index.html");
         
         // Handle nested paths (multi-level routes)
-        registry.addViewController("/**/{path:[^\\.]*}")
-                .setViewName("forward:/index.html");
+        // registry.addViewController("/**/{path:[^\\.]*}")
+        //         .setViewName("forward:/index.html");
     }
 }

@@ -1,7 +1,4 @@
 spring:
-  mvc:
-    pathmatch:
-      matching-strategy: ant_path_matcher
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/examdb}
     username: ${DB_USERNAME:examuser}
