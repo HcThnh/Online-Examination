@@ -1,1 +1,29 @@
 @import "tailwindcss";
+
+@theme {
+  --color-primary: #0056D2;
+  --color-primary-hover: #00419e;
+  --color-secondary: #f5f7fa;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply font-sans antialiased bg-gray-50 text-slate-800;
+  }
+}
+
+:root {
+  --primary: #0056D2;
+  --primary-hover: #00419e;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.animate-shake {
+  animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+}

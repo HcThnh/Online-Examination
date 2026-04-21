@@ -8,8 +8,33 @@ on:
     branches: [main]
     paths: [backend/**]
 
+# Stages run in sequence: lint → unit tests → integration tests.
+# Each stage only runs if the previous one succeeded.
 jobs:
-  build-and-test:
+  lint:
+    name: Lint (checkstyle)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+
+      - name: Checkstyle
+        run: ./mvnw checkstyle:check -B
+
+  unit-tests:
+    name: Unit tests
+    needs: lint
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -29,5 +54,32 @@ jobs:
       - name: Compile
         run: ./mvnw compile -B -q
 
-      - name: Run tests
-        run: ./mvnw test -B
+      - name: Run unit tests
+        run: ./mvnw test -B -Dtest='!ApiIntegrationTest'
+
+  integration-tests:
+    name: API integration tests
+    needs: unit-tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+
+      # ApiIntegrationTest uses Testcontainers to spin up a real Postgres,
+      # which needs a Docker daemon. ubuntu-latest runners have one.
+      - name: Verify Docker is available
+        run: docker info > /dev/null
+
+      - name: Run API integration tests
+        run: ./mvnw test -B -Dtest=ApiIntegrationTest

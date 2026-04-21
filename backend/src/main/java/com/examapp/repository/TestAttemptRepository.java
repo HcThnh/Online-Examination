@@ -15,8 +15,14 @@ public interface TestAttemptRepository extends JpaRepository<TestAttempt, Long> 
 
     List<TestAttempt> findByExamId(Long examId);
 
-    @Query("SELECT ta FROM TestAttempt ta JOIN ta.student s WHERE ta.exam.id = :examId " +
-           "AND (:search IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%')))")
+    @Query(value = "SELECT ta FROM TestAttempt ta JOIN ta.student s WHERE ta.exam.id = :examId",
+           countQuery = "SELECT count(ta) FROM TestAttempt ta WHERE ta.exam.id = :examId")
+    Page<TestAttempt> findByExamIdPaged(@Param("examId") Long examId, Pageable pageable);
+
+    @Query(value = "SELECT ta FROM TestAttempt ta JOIN ta.student s WHERE ta.exam.id = :examId " +
+                   "AND LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%'))",
+           countQuery = "SELECT count(ta) FROM TestAttempt ta JOIN ta.student s WHERE ta.exam.id = :examId " +
+                        "AND LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%'))")
     Page<TestAttempt> findByExamIdWithSearch(@Param("examId") Long examId,
                                              @Param("search") String search,
                                              Pageable pageable);

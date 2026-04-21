@@ -57,7 +57,7 @@ class ResultServiceTest {
 
         TestAttempt ta = createAttempt(exam, "Alice", 80, 100);
         Page<TestAttempt> page = new PageImpl<>(List.of(ta), PageRequest.of(0, 20), 1);
-        when(testAttemptRepository.findByExamIdWithSearch(eq(10L), isNull(), any(Pageable.class))).thenReturn(page);
+        when(testAttemptRepository.findByExamIdPaged(eq(10L), any(Pageable.class))).thenReturn(page);
 
         ClassResultsResponse response = resultService.getClassResults(1L, 10L, "score", "desc", null, 0, 20);
 

@@ -6,12 +6,14 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: false
+      ddl-auto: ${HIBERNATE_DDL_AUTO:update}
+    show-sql: ${SHOW_SQL:false}
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+        jdbc:
+          ssl_mode: ${SSL_MODE:require}
 
 app:
   jwt:
@@ -27,7 +29,7 @@ springdoc:
     tags-sorter: alpha
 
 server:
-  port: 8080
+  port: ${PORT:8080}
 
 ---
 spring:

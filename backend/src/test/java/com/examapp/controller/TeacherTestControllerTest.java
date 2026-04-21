@@ -65,11 +65,24 @@ class TeacherTestControllerTest {
                 new TestSummaryResponse(1L, "Math", "ABC", 5, Instant.now())
         );
         when(examService.listTests(1L)).thenReturn(tests);
-
-        mockMvc.perform(get("/api/teacher/tests").with(asTeacher()))
+mockMvc.perform(get("/api/teacher/tests").with(asTeacher()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].title").value("Math"))
                 .andExpect(jsonPath("$[0].questionCount").value(5));
+    }
+
+    @Test
+    void getTestDetail_returnsDetail() throws Exception {
+        TestDetailResponse detail = new TestDetailResponse(
+                1L, "Math", "Desc", "ABC", 1L, Instant.now(), Instant.now(), 5, 10, 82.0);
+        when(examService.getTestDetail(1L, 1L)).thenReturn(detail);
+
+        mockMvc.perform(get("/api/teacher/tests/1").with(asTeacher()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Math"))
+                .andExpect(jsonPath("$.questionCount").value(5))
+                .andExpect(jsonPath("$.submissionCount").value(10))
+                .andExpect(jsonPath("$.averageScorePercentage").value(82.0));
     }
 
     @Test

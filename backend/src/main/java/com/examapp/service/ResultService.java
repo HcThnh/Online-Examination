@@ -1,8 +1,14 @@
 package com.examapp.service;
 
-import com.examapp.dto.result.*;
-import com.examapp.entity.*;
-import com.examapp.repository.*;
+import com.examapp.dto.result.ClassResultsResponse;
+import com.examapp.dto.result.ClassStatisticsResponse;
+import com.examapp.dto.result.QuestionAnalysisResponse;
+import com.examapp.entity.Question;
+import com.examapp.entity.StudentAnswer;
+import com.examapp.entity.TestAttempt;
+import com.examapp.repository.QuestionRepository;
+import com.examapp.repository.StudentAnswerRepository;
+import com.examapp.repository.TestAttemptRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -43,7 +49,9 @@ public class ResultService {
         String sortField = mapSortField(sort);
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortField));
 
-        Page<TestAttempt> attemptPage = testAttemptRepository.findByExamIdWithSearch(testId, search, pageable);
+        Page<TestAttempt> attemptPage = (search == null || search.isBlank())
+                ? testAttemptRepository.findByExamIdPaged(testId, pageable)
+                : testAttemptRepository.findByExamIdWithSearch(testId, search, pageable);
 
         List<ClassResultsResponse.StudentResultDto> results = attemptPage.getContent().stream()
                 .map(ta -> {
@@ -120,7 +128,9 @@ public class ResultService {
     }
 
     private String mapSortField(String sort) {
-        if (sort == null) return "submittedAt";
+        if (sort == null) {
+            return "submittedAt";
+        }
         return switch (sort) {
             case "studentName" -> "student.name";
             case "score" -> "score";

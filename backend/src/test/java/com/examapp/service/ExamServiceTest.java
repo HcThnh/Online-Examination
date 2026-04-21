@@ -8,6 +8,7 @@ import com.examapp.exception.DuplicateResourceException;
 import com.examapp.exception.ResourceNotFoundException;
 import com.examapp.exception.ForbiddenException;
 import com.examapp.repository.ExamRepository;
+import com.examapp.repository.TestAttemptRepository;
 import com.examapp.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,6 +29,7 @@ class ExamServiceTest {
 
     @Mock private ExamRepository examRepository;
     @Mock private UserRepository userRepository;
+    @Mock private TestAttemptRepository testAttemptRepository;
     @InjectMocks private ExamService examService;
 
     private User createTeacher() {
@@ -86,6 +88,40 @@ class ExamServiceTest {
         assertEquals(1, result.size());
         assertEquals("Math Test", result.get(0).title());
         assertEquals(5, result.get(0).questionCount());
+    }
+
+    @Test
+    void getTestDetail_success() {
+        User teacher = createTeacher();
+        Exam exam = createExam(teacher);
+        when(examRepository.findById(1L)).thenReturn(Optional.of(exam));
+        when(examRepository.countQuestionsByExamId(1L)).thenReturn(3);
+        when(testAttemptRepository.countByExamId(1L)).thenReturn(2L);
+        when(testAttemptRepository.averagePercentageByExamId(1L)).thenReturn(75.5);
+
+        TestDetailResponse detail = examService.getTestDetail(1L, 1L);
+
+        assertEquals(1L, detail.id());
+        assertEquals("Math Test", detail.title());
+        assertEquals("ABC123", detail.passcode());
+        assertEquals(3, detail.questionCount());
+        assertEquals(2L, detail.submissionCount());
+        assertEquals(75.5, detail.averageScorePercentage());
+    }
+
+    @Test
+    void getTestDetail_noSubmissions_averageIsNull() {
+        User teacher = createTeacher();
+        Exam exam = createExam(teacher);
+        when(examRepository.findById(1L)).thenReturn(Optional.of(exam));
+        when(examRepository.countQuestionsByExamId(1L)).thenReturn(0);
+        when(testAttemptRepository.countByExamId(1L)).thenReturn(0L);
+
+        TestDetailResponse detail = examService.getTestDetail(1L, 1L);
+
+        assertEquals(0L, detail.submissionCount());
+        assertNull(detail.averageScorePercentage());
+        verify(testAttemptRepository, never()).averagePercentageByExamId(any());
     }
 
     @Test

@@ -1,0 +1,27 @@
+# Java / Maven
+**/target/
+**/.mvn/
+**/mvnw
+**/mvnw.cmd
+
+# Node / JS
+**/node_modules/
+**/dist/
+**/dist-ssr/
+**/.vite/
+
+# Environment Variables
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Logs
+**/*.log
+
+# IDEs
+**/.idea/
+**/.vscode/
+**/*.iml
+**/*.iws
+**/*.ipr
+.DS_Store

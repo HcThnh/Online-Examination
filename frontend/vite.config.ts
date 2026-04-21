@@ -8,4 +8,8 @@ export default defineConfig({
     tailwindcss(),
     react()
   ],
+  server: {
+    port: 5173,
+    strictPort: true // Đảm bảo luôn sử dụng port 5173 hoặc báo lỗi nếu port bị chiếm
+  }
 })

@@ -50,6 +50,14 @@
 - **Calls:** `POST /api/auth/login`
 - **UI renders:** Form with email, password fields. "Login" button. Link to register page. Error message on invalid credentials. On success → store JWT in memory/context → redirect to `/dashboard`.
 
+**FE-1.3 · Change Password**
+
+- **Calls:** `POST /api/auth/change-password` with `Authorization: Bearer <JWT>` (teacher only)
+- **Request:** `{ "currentPassword": "string", "newPassword": "string" }`
+- **Response (200):** `{ "message": "Password updated successfully" }`
+- **Response (401):** `{ "error": "Current password is incorrect" }` (or generic unauthorized if token missing/invalid)
+- **UI renders:** Form with current password, new password, and confirm new password. “Update password” button. Client-side validation: new password min 8 characters, confirm must match new password; inline errors per field. On API validation errors (400), show first field error from `{ "error": "…" }`. On success, show a success message or toast; optionally sign the user out and redirect to `/login` so they log in with the new password.
+
 ---
 
 ### Story 2 — Create a Test
@@ -264,6 +272,30 @@
   ```
 - **Notes:** Filter by teacher_id from JWT. Order by created_at DESC. Use a projection or JPQL to include question count.
 
+**BE-5.2 · Get Test Detail API**
+
+- **Tables:** `tests`, `questions` (count), `test_attempts` (submission count and average score %)
+- **Endpoint:** `GET /api/teacher/tests/{testId}`
+- **Auth:** Bearer token required, must own the test (same ownership check as update/delete)
+- **Response (200):**
+  ```json
+  {
+    "id": 1,
+    "title": "string",
+    "description": "string",
+    "passcode": "string",
+    "teacherId": 1,
+    "createdAt": "2026-04-11T00:00:00Z",
+    "updatedAt": "2026-04-11T00:00:00Z",
+    "questionCount": 10,
+    "submissionCount": 24,
+    "averageScorePercentage": 78.5
+  }
+  ```
+- **Response (404):** `{ "error": "Test not found" }`
+- **Response (403):** `{ "error": "Not authorized to access this test" }`
+- **Notes:** `averageScorePercentage` is the mean of `(score / maxScore) * 100` over all attempts for this test; omit or set `null` when `submissionCount` is 0. Verify `teacher_id` on the test matches the JWT user.
+
 **FE-5.1 · Teacher Dashboard Screen**
 
 - **Screen:** `/dashboard`
@@ -276,6 +308,12 @@
   - Delete button per card (triggers FE-4.2 confirmation modal)
   - Empty state: "No tests yet. Create your first test!" if list is empty
   - Tests sorted by most recently created
+
+**FE-5.2 · Test Detail (metadata & stats)**
+
+- **Screen:** `/dashboard/tests/{testId}` (overview) and/or top section of `/dashboard/tests/{testId}/edit` — wherever the teacher first lands to see full test context
+- **Calls:** `GET /api/teacher/tests/{testId}` (Bearer JWT)
+- **UI renders:** Title, description, passcode (with optional “copy passcode”), created/updated timestamps, **question count**, **submission count** (completed attempts), and **average score %** (hide or show “—” when null / no submissions). Loading and error states (404/403). Link or button to open question editor and to results/statistics screens if those routes exist.
 
 ---
 
