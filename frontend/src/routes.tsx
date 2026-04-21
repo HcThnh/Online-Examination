@@ -49,9 +49,6 @@ const AppRoutes = () => {
         <Route path="/dashboard/tests/:testId/question-analysis" element={<QuestionAnalysisScreen />} />
       </Route>
 
-      {/* Default: Landing page (student entry point) */}
-      <Route path="/" element={<LandingPage />} />
-
       {/* 404 Page */}
       <Route path="*" element={
         <div className="min-h-screen flex flex-col items-center justify-center p-4">

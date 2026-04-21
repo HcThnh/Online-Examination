@@ -84,9 +84,9 @@ const Login: React.FC = () => {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <label htmlFor="password" className="text-sm font-bold text-slate-700 ml-1">Password</label>
-            <Link to="/forgot-password" title="Forgot password" className="text-sm font-bold text-primary hover:underline underline-offset-4">
+            {/* <Link to="/forgot-password" title="Forgot password" className="text-sm font-bold text-primary hover:underline underline-offset-4">
               Forgot?
-            </Link>
+            </Link> */}
           </div>
           <div className="relative">
             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
