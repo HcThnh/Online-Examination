@@ -25,7 +25,7 @@ const ClassResults = () => {
     const fetchResults = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:8080/api/teacher/tests/${testId}/results?size=100`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080/api'}/teacher/tests/${testId}/results?size=100`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await response.json();
@@ -41,7 +41,7 @@ const ClassResults = () => {
         try {
             const token = localStorage.getItem('token');
             const response = await fetch(
-                `http://localhost:8080/api/teacher/tests/${testId}/results/export?format=${format}`,
+                `${import.meta.env.VITE_API_URL || 'http://localhost:8080/api'}/teacher/tests/${testId}/results/export?format=${format}`,
                 { headers: { 'Authorization': `Bearer ${token}` } }
             );
             if (!response.ok) throw new Error('Export failed');

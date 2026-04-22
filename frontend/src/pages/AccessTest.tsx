@@ -37,7 +37,7 @@ const AccessTest: React.FC = () => {
 
         try {
             const response = await axios.post<AccessResponse>(
-                'http://localhost:8080/api/student/access',
+                `${import.meta.env.VITE_API_URL || 'http://localhost:8080/api'}/student/access`,
                 {
                     passcode: passcode.trim(),
                     studentName: "Student" // Temporary identifier for token generation
